@@ -7,7 +7,7 @@ A modern, dark-themed YouTube video and audio downloader built with Python.
 ## ✨ Features
 - **High Quality:** Download in 4K, 1080p, or 720p.
 - **MP3 Conversion:** Extract high-quality audio from any video.
-- **Modern UI:** Sleek, cyber-glass dark theme.
+- **Modern UI:** Sleek, dark theme.
 - **Batch Support:** Download multiple links or entire playlists.
 - **Portable:** Single standalone `.exe` file.
 
