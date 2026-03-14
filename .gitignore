@@ -1,5 +1,6 @@
 build/
 dist/
+setup/
 __pycache__/
 *.spec
 .venv/
