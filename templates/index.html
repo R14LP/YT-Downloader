@@ -27,7 +27,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         html, body {
-            height: 100%;
             background: var(--bg);
             color: var(--text);
             font-family: var(--mono);
@@ -35,13 +34,10 @@
         }
 
         body {
-            display: flex;
-            flex-direction: column;
             min-height: 100vh;
             padding: clamp(12px, 3vw, 32px);
         }
 
-        /* Subtle grid background */
         body::before {
             content: '';
             position: fixed;
@@ -61,12 +57,8 @@
             width: 100%;
             max-width: 560px;
             margin: 0 auto;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* Header */
         .header {
             display: flex;
             align-items: baseline;
@@ -81,15 +73,11 @@
             font-size: clamp(20px, 4vw, 28px);
             font-weight: 800;
             letter-spacing: -1px;
-            color: var(--text);
         }
 
-        .header h1 span {
-            color: var(--red);
-        }
+        .header h1 span { color: var(--red); }
 
         .version-tag {
-            font-family: var(--mono);
             font-size: 10px;
             color: var(--text-dim);
             border: 1px solid var(--border-bright);
@@ -98,7 +86,6 @@
             letter-spacing: 1px;
         }
 
-        /* Form sections */
         .section-label {
             font-size: 9px;
             letter-spacing: 2px;
@@ -122,48 +109,141 @@
         }
 
         textarea::placeholder { color: var(--text-dim); }
-
         textarea:focus {
             outline: none;
             border-color: var(--red-dim);
             box-shadow: 0 0 0 3px var(--red-glow);
         }
 
-        /* Controls row */
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(8px, 2vw, 14px);
-            margin: clamp(12px, 2vw, 16px) 0;
+        .btn-analyze {
+            width: 100%;
+            margin-top: 10px;
+            background: transparent;
+            border: 1px solid var(--border-bright);
+            color: var(--text-mid);
+            padding: clamp(10px, 1.5vw, 13px);
+            border-radius: 8px;
+            font-family: var(--mono);
+            font-size: clamp(11px, 1.5vw, 12px);
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .control-block {
+        .btn-analyze:hover:not(:disabled) { border-color: var(--red-dim); color: var(--text); }
+        .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        #analyze-results {
+            margin-top: 14px;
             display: flex;
             flex-direction: column;
+            gap: 10px;
         }
 
-        select {
+        .analyze-item {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 8px;
-            color: var(--text);
-            padding: clamp(9px, 1.5vw, 12px) clamp(10px, 1.5vw, 14px);
-            font-family: var(--mono);
-            font-size: clamp(11px, 1.5vw, 12px);
+            overflow: hidden;
+            animation: slideIn 0.2s ease forwards;
+        }
+
+        .thumb-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
             cursor: pointer;
-            transition: border-color 0.2s;
+            overflow: hidden;
+        }
+
+        .thumb-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .thumb-wrap:hover img { transform: scale(1.03); }
+
+        .thumb-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .thumb-wrap:hover .thumb-overlay { opacity: 1; }
+
+        .play-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: rgba(212, 43, 43, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transition: transform 0.15s, background 0.15s;
+        }
+
+        .thumb-wrap:hover .play-btn { transform: scale(1.1); background: var(--red); }
+        .play-btn svg { margin-left: 4px; }
+
+        .thumb-no-preview {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface2);
+            color: var(--text-dim);
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .analyze-info { padding: 12px 14px; }
+
+        .analyze-title {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .analyze-meta {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .analyze-controls { display: flex; gap: 8px; }
+
+        select {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 6px 28px 6px 10px;
+            font-family: var(--mono);
+            font-size: 11px;
+            cursor: pointer;
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a5568'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 12px center;
+            background-position: right 10px center;
+            flex: 1;
         }
 
-        select:focus {
-            outline: none;
-            border-color: var(--red-dim);
-        }
+        select:focus { outline: none; border-color: var(--red-dim); }
 
-        /* Download button */
         .btn-download {
             width: 100%;
             background: var(--red);
@@ -177,17 +257,8 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             cursor: pointer;
-            transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-download::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
-            pointer-events: none;
+            transition: all 0.2s;
+            margin-top: 14px;
         }
 
         .btn-download:hover:not(:disabled) {
@@ -195,97 +266,98 @@
             transform: translateY(-1px);
         }
 
-        .btn-download:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
         .btn-download:disabled {
             background: var(--surface2);
             color: var(--text-dim);
             cursor: not-allowed;
-            box-shadow: none;
         }
 
-        /* Download list */
         #dl-list {
-            margin-top: clamp(14px, 3vw, 22px);
+            margin-top: 20px;
             display: flex;
             flex-direction: column;
-            gap: clamp(8px, 1.5vw, 10px);
+            gap: 10px;
         }
 
         .dl-item {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: clamp(12px, 2vw, 16px);
+            overflow: hidden;
             transition: border-color 0.4s;
             animation: slideIn 0.25s ease forwards;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to   { opacity: 1; transform: translateY(0); }
         }
 
         .dl-item.done  { border-color: rgba(29, 185, 84, 0.25); }
         .dl-item.error { border-color: rgba(212, 43, 43, 0.35); }
 
-        .dl-header {
+        .dl-thumb-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .dl-thumb-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            filter: brightness(0.4);
+            transition: filter 0.3s;
+        }
+
+        .dl-item.done .dl-thumb-wrap { cursor: pointer; }
+        .dl-item.done .dl-thumb-wrap img { filter: brightness(0.65); }
+        .dl-item.done .dl-thumb-wrap:hover img { filter: brightness(0.85); }
+        .dl-item.done .dl-thumb-wrap:hover .dl-thumb-overlay { opacity: 1; }
+
+        .dl-thumb-overlay {
+            position: absolute;
+            inset: 0;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .dl-progress-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.6);
+            padding: 16px;
+        }
+
+        .dl-item.done .dl-progress-overlay,
+        .dl-item.error .dl-progress-overlay { display: none; }
+
+        .dl-prog-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
             margin-bottom: 10px;
-        }
-
-        .dl-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--border-bright);
-            flex-shrink: 0;
-            transition: background 0.3s;
-        }
-
-        .dl-dot.active { background: var(--red); animation: blink 1.2s infinite; }
-        .dl-dot.done   { background: var(--green); animation: none; }
-        .dl-dot.error  { background: var(--red); animation: none; }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.3; }
-        }
-
-        .dl-title {
-            font-family: var(--mono);
-            font-size: clamp(10px, 1.5vw, 12px);
-            color: var(--text);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            flex: 1;
+            width: 100%;
         }
 
-        .dl-check {
-            font-size: 13px;
-            color: var(--green);
-            flex-shrink: 0;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .dl-item.done .dl-check { opacity: 1; }
-
-        .dl-status {
-            font-size: clamp(9px, 1.3vw, 11px);
-            color: var(--text-dim);
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
+        .dl-prog-status {
+            font-size: 10px;
+            color: var(--text-mid);
+            margin-bottom: 10px;
         }
 
         .bar-bg {
+            width: 100%;
             height: 3px;
-            background: var(--border);
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
             overflow: hidden;
         }
@@ -300,16 +372,137 @@
 
         .bar-fill.done { background: var(--green); }
 
-        .dl-meta {
+        .dl-prog-meta {
             display: flex;
             justify-content: space-between;
-            margin-top: 7px;
-            font-size: clamp(9px, 1.2vw, 10px);
+            width: 100%;
+            margin-top: 6px;
+            font-size: 9px;
             color: var(--text-dim);
-            letter-spacing: 0.5px;
         }
 
-        /* Scrollbar */
+        .dl-bottom {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border);
+        }
+
+        .dl-bottom-title {
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .dl-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .dl-item.done .dl-actions {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .action-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-mid);
+            padding: 5px 9px;
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-btn:hover { border-color: var(--border-bright); color: var(--text); }
+        .action-btn.open-btn { border-color: rgba(29,185,84,0.3); color: var(--green); }
+        .action-btn.open-btn:hover { background: var(--green-glow); }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        #preview-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #preview-modal.open { display: flex; }
+
+        .preview-box {
+            background: var(--surface);
+            border: 1px solid var(--border-bright);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 520px;
+            overflow: hidden;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-header-title {
+            font-size: 11px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .preview-close {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            margin-left: 12px;
+            flex-shrink: 0;
+        }
+
+        .preview-close:hover { color: var(--text); }
+
+        #preview-player {
+            width: 100%;
+            max-height: 320px;
+            background: #000;
+            display: block;
+        }
+
+        .preview-not-ready {
+            padding: 32px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            display: none;
+        }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
@@ -319,147 +512,291 @@
 <div class="wrapper">
     <div class="header">
         <h1>YT<span>.</span>DL</h1>
-        <span class="version-tag">v1.3.0</span>
+        <span class="version-tag">v1.4.0</span>
     </div>
 
     <div class="section-label">Links — one per line or playlist URL</div>
     <textarea id="urls" rows="3" placeholder="https://youtube.com/watch?v=..."></textarea>
+    <button id="analyze-btn" class="btn-analyze">ANALYZE</button>
 
-    <div class="controls">
-        <div class="control-block">
-            <div class="section-label">Format</div>
-            <select id="format_type">
-                <option value="video">MP4 Video</option>
-                <option value="audio">MP3 Audio</option>
-            </select>
-        </div>
-        <div class="control-block">
-            <div class="section-label" id="quality-label">Quality</div>
-            <select id="quality">
-                <option value="2160">4K UHD</option>
-                <option value="1080" selected>1080p HD</option>
-                <option value="720">720p</option>
-                <option value="480">480p</option>
-            </select>
-        </div>
-    </div>
-
-    <button id="dl-btn" class="btn-download">Start Download</button>
-
+    <div id="analyze-results"></div>
+    <button id="dl-btn" class="btn-download" style="display:none">START DOWNLOAD</button>
     <div id="dl-list"></div>
 </div>
 
-<script>
-    const btn = document.getElementById('dl-btn');
-    const formatSelect = document.getElementById('format_type');
-    const qualitySelect = document.getElementById('quality');
-    const qualityLabel = document.getElementById('quality-label');
-    const dlList = document.getElementById('dl-list');
+<div id="preview-modal">
+    <div class="preview-box">
+        <div class="preview-header">
+            <span class="preview-header-title" id="preview-title">Preview</span>
+            <button class="preview-close" id="preview-close">✕</button>
+        </div>
+        <video id="preview-player" controls></video>
+        <div class="preview-not-ready" id="preview-not-ready">Download the file first to preview it.</div>
+    </div>
+</div>
 
-    formatSelect.addEventListener('change', () => {
-        if (formatSelect.value === 'audio') {
-            qualityLabel.textContent = 'Bitrate';
-            qualitySelect.innerHTML = `
+<script>
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const dlBtn = document.getElementById('dl-btn');
+    const analyzeResults = document.getElementById('analyze-results');
+    const previewModal = document.getElementById('preview-modal');
+    const previewPlayer = document.getElementById('preview-player');
+    const previewNotReady = document.getElementById('preview-not-ready');
+
+    document.getElementById('preview-close').addEventListener('click', () => {
+        previewModal.classList.remove('open');
+        previewPlayer.pause();
+        previewPlayer.src = '';
+    });
+
+    let analyzedItems = [];
+    let pollInterval = null;
+    const thumbCache = {};
+
+    analyzeBtn.addEventListener('click', async () => {
+        const urls = document.getElementById('urls').value.trim();
+        if (!urls) return;
+
+        analyzeBtn.disabled = true;
+        analyzeBtn.textContent = 'ANALYZING...';
+        analyzeResults.innerHTML = '';
+        dlBtn.style.display = 'none';
+        analyzedItems = [];
+
+        const fd = new FormData();
+        fd.append('urls', urls);
+
+        const res = await fetch('/analyze', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = 'ANALYZE';
+
+        if (data.status !== 'success') return;
+
+        data.results.forEach((item, i) => {
+            analyzedItems.push(item);
+            thumbCache[String(i)] = { thumbnail: item.thumbnail, title: item.title };
+
+            const el = document.createElement('div');
+            el.className = 'analyze-item';
+
+            if (item.type === 'error') {
+                el.innerHTML = `
+                    <div class="analyze-info">
+                        <div class="analyze-title" style="color:var(--red)">Error</div>
+                        <div class="analyze-meta">${item.message}</div>
+                    </div>`;
+                analyzeResults.appendChild(el);
+                return;
+            }
+
+            const thumbHtml = item.thumbnail
+                ? `<img src="${item.thumbnail}" alt="" loading="lazy">`
+                : `<div class="thumb-no-preview">NO PREVIEW</div>`;
+
+            const heightOptions = (item.heights || [1080, 720, 480])
+                .map(h => `<option value="${h}">${h}p${h >= 2160 ? ' 4K' : h >= 1080 ? ' HD' : ''}</option>`)
+                .join('');
+
+            el.innerHTML = `
+                <div class="thumb-wrap" id="athumb-${i}">
+                    ${thumbHtml}
+                    <div class="thumb-overlay">
+                        <div class="play-btn">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+                                <polygon points="5,3 18,10 5,17"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="analyze-info">
+                    <div class="analyze-title">${item.title}</div>
+                    <div class="analyze-meta">${item.duration || ''}</div>
+                    <div class="analyze-controls">
+                        <select id="fmt-${i}">
+                            <option value="video">MP4 Video</option>
+                            <option value="audio">MP3 Audio</option>
+                        </select>
+                        <select id="qual-${i}">
+                            ${heightOptions}
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            el.querySelector(`#fmt-${i}`).addEventListener('change', (e) => {
+                updateQualitySelect(el.querySelector(`#qual-${i}`), e.target.value, item.heights || [1080, 720, 480]);
+            });
+
+            analyzeResults.appendChild(el);
+        });
+
+        if (analyzedItems.filter(x => x.type !== 'error').length > 0) {
+            dlBtn.style.display = 'block';
+        }
+    });
+
+    function updateQualitySelect(sel, format, heights) {
+        if (format === 'audio') {
+            sel.innerHTML = `
                 <option value="320">320 kbps</option>
                 <option value="192" selected>192 kbps</option>
                 <option value="128">128 kbps</option>
             `;
         } else {
-            qualityLabel.textContent = 'Quality';
-            qualitySelect.innerHTML = `
-                <option value="2160">4K UHD</option>
-                <option value="1080" selected>1080p HD</option>
-                <option value="720">720p</option>
-                <option value="480">480p</option>
-            `;
+            sel.innerHTML = (heights || [1080, 720, 480]).map(h =>
+                `<option value="${h}">${h}p${h >= 2160 ? ' 4K' : h >= 1080 ? ' HD' : ''}</option>`
+            ).join('');
         }
-    });
+    }
 
-    let pollInterval = null;
+    dlBtn.addEventListener('click', async () => {
+        const validItems = analyzedItems.filter(x => x.type !== 'error');
+        if (validItems.length === 0) return;
 
-    btn.addEventListener('click', async () => {
-        const urls = document.getElementById('urls').value.trim();
-        if (!urls) return;
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
 
-        btn.disabled = true;
-        btn.textContent = 'Processing...';
-        dlList.innerHTML = '';
-        if (pollInterval) clearInterval(pollInterval);
+        const fmt = document.getElementById('fmt-0')?.value || 'video';
+        const qual = document.getElementById('qual-0')?.value || '1080';
 
-        const formData = new FormData();
-        formData.append('urls', urls);
-        formData.append('format_type', formatSelect.value);
-        formData.append('quality', qualitySelect.value);
+        dlBtn.disabled = true;
+        dlBtn.textContent = 'DOWNLOADING...';
+        document.getElementById('dl-list').innerHTML = '';
+        analyzeResults.innerHTML = '';
+        dlBtn.style.display = 'none';
 
-        const res = await fetch('/download', { method: 'POST', body: formData });
+        const fd = new FormData();
+        fd.append('items', JSON.stringify(validItems.map(x => ({ url: x.url, title: x.title }))));
+        fd.append('format_type', fmt);
+        fd.append('quality', qual);
+
+        const res = await fetch('/download', { method: 'POST', body: fd });
         const result = await res.json();
 
         if (result.status !== 'success') {
-            btn.disabled = false;
-            btn.textContent = 'Start Download';
+            dlBtn.disabled = false;
+            dlBtn.textContent = 'START DOWNLOAD';
             return;
         }
 
-        btn.textContent = 'Downloading...';
-
         pollInterval = setInterval(async () => {
+            const dlList = document.getElementById('dl-list');
+            if (!dlList) return;
+
             const r = await fetch('/progress');
             const data = await r.json();
 
-            let allDone = true;
-
             for (const [id, item] of Object.entries(data)) {
-                if (!item.done && !item.error) allDone = false;
-
+                const thumb = thumbCache[id] || { thumbnail: '', title: item.title };
                 let el = document.getElementById(`dl-${id}`);
+
                 if (!el) {
                     el = document.createElement('div');
                     el.id = `dl-${id}`;
                     el.className = 'dl-item';
+
+                    const thumbImg = thumb.thumbnail
+                        ? `<img src="${thumb.thumbnail}" alt="">`
+                        : `<div class="thumb-no-preview">NO PREVIEW</div>`;
+
                     el.innerHTML = `
-                        <div class="dl-header">
-                            <div class="dl-dot" id="dot-${id}"></div>
-                            <div class="dl-title">${item.title}</div>
-                            <div class="dl-check">&#10003;</div>
+                        <div class="dl-thumb-wrap" id="dlthumb-${id}">
+                            ${thumbImg}
+                            <div class="dl-progress-overlay">
+                                <div class="dl-prog-title">${item.title}</div>
+                                <div class="dl-prog-status" id="status-${id}">Waiting...</div>
+                                <div class="bar-bg"><div class="bar-fill" id="bar-${id}"></div></div>
+                                <div class="dl-prog-meta">
+                                    <span id="speed-${id}">—</span>
+                                    <span id="eta-${id}">—</span>
+                                </div>
+                            </div>
+                            <div class="dl-thumb-overlay">
+                                <div class="play-btn">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+                                        <polygon points="5,3 18,10 5,17"/>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
-                        <div class="dl-status" id="status-${id}">Waiting...</div>
-                        <div class="bar-bg"><div class="bar-fill" id="bar-${id}"></div></div>
-                        <div class="dl-meta">
-                            <span id="speed-${id}">—</span>
-                            <span id="eta-${id}">—</span>
+                        <div class="dl-bottom">
+                            <div class="dl-bottom-title">${item.title}</div>
+                            <div class="dl-actions">
+                                <button class="action-btn" onclick="showInFolder('${id}')">Folder</button>
+                                <button class="action-btn open-btn" onclick="openFile('${id}')">Open</button>
+                            </div>
                         </div>
                     `;
+
                     dlList.appendChild(el);
+
+                    document.getElementById(`dlthumb-${id}`).addEventListener('click', () => {
+                        const fp = el.dataset.filepath;
+                        if (fp) previewFile(id);
+                    });
                 }
 
-                const dot = document.getElementById(`dot-${id}`);
-                const bar = document.getElementById(`bar-${id}`);
+                const statusEl = document.getElementById(`status-${id}`);
+                const barEl = document.getElementById(`bar-${id}`);
+                const speedEl = document.getElementById(`speed-${id}`);
+                const etaEl = document.getElementById(`eta-${id}`);
 
-                document.getElementById(`status-${id}`).textContent = item.status;
-                document.getElementById(`speed-${id}`).textContent = item.speed !== '-' ? item.speed : '—';
-                document.getElementById(`eta-${id}`).textContent = item.eta !== '-' ? `ETA ${item.eta}` : '—';
-                bar.style.width = item.percent + '%';
+                if (statusEl) statusEl.textContent = item.status;
+                if (barEl) barEl.style.width = item.percent + '%';
+                if (speedEl) speedEl.textContent = item.speed !== '-' ? item.speed : '—';
+                if (etaEl) etaEl.textContent = item.eta !== '-' ? `ETA ${item.eta}` : '—';
 
                 if (item.done) {
                     el.className = 'dl-item done';
-                    dot.className = 'dl-dot done';
-                    bar.className = 'bar-fill done';
-                    bar.style.width = '100%';
+                    if (barEl) barEl.className = 'bar-fill done';
+                    if (item.filepath) el.dataset.filepath = item.filepath;
                 } else if (item.error) {
                     el.className = 'dl-item error';
-                    dot.className = 'dl-dot error';
-                } else if (item.status !== 'Waiting...') {
-                    dot.className = 'dl-dot active';
                 }
             }
 
-            if (allDone) {
+            const allFinished = Object.values(data).every(x => x.done || x.error);
+            if (allFinished) {
                 clearInterval(pollInterval);
-                btn.disabled = false;
-                btn.textContent = 'Start Download';
+                pollInterval = null;
+                dlBtn.disabled = false;
+                dlBtn.textContent = 'START DOWNLOAD';
             }
         }, 800);
     });
+
+    async function showInFolder(id) {
+        const fp = document.getElementById(`dl-${id}`)?.dataset.filepath;
+        if (!fp) return;
+        const fd = new FormData();
+        fd.append('filepath', fp);
+        await fetch('/show_in_folder', { method: 'POST', body: fd });
+    }
+
+    async function openFile(id) {
+        const fp = document.getElementById(`dl-${id}`)?.dataset.filepath;
+        if (!fp) return;
+        const fd = new FormData();
+        fd.append('filepath', fp);
+        await fetch('/open_file', { method: 'POST', body: fd });
+    }
+
+    function previewFile(id) {
+        const el = document.getElementById(`dl-${id}`);
+        const fp = el?.dataset.filepath;
+        if (!fp) return;
+
+        document.getElementById('preview-title').textContent = el.querySelector('.dl-bottom-title').textContent;
+        previewNotReady.style.display = 'none';
+        previewPlayer.style.display = 'block';
+        previewPlayer.src = `/preview_file?filepath=${encodeURIComponent(fp)}`;
+        previewModal.classList.add('open');
+        previewPlayer.play();
+    }
 </script>
 </body>
 </html>
