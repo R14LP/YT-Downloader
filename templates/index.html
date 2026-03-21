@@ -33,10 +33,7 @@
             overflow-x: hidden;
         }
 
-        body {
-            min-height: 100vh;
-            padding: clamp(12px, 3vw, 32px);
-        }
+        body { min-height: 100vh; padding: clamp(12px, 3vw, 32px); }
 
         body::before {
             content: '';
@@ -86,6 +83,77 @@
             letter-spacing: 1px;
         }
 
+        .settings-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border-bright);
+            color: var(--text-mid);
+            border-radius: 6px;
+            padding: 5px 12px;
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+
+        .settings-btn:hover { color: var(--text); border-color: var(--red-dim); }
+        .settings-btn.active { color: var(--text); border-color: var(--red-dim); background: var(--surface); }
+
+        .settings-dropdown {
+            display: none;
+            background: var(--surface);
+            border: 1px solid var(--border-bright);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 14px;
+            animation: slideIn 0.15s ease forwards;
+        }
+
+        .settings-dropdown.open { display: block; }
+
+        .settings-label {
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 1px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active { color: var(--text); border-bottom-color: var(--red); }
+        .tab-btn:hover:not(.active) { color: var(--text-mid); }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
         .section-label {
             font-size: 9px;
             letter-spacing: 2px;
@@ -114,6 +182,74 @@
             border-color: var(--red-dim);
             box-shadow: 0 0 0 3px var(--red-glow);
         }
+
+        .folder-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 12px 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+        }
+
+        .folder-path {
+            flex: 1;
+            font-size: 11px;
+            color: var(--text-mid);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-folder {
+            background: var(--surface2);
+            border: 1px solid var(--border-bright);
+            color: var(--text-mid);
+            border-radius: 6px;
+            padding: 5px 12px;
+            font-family: var(--mono);
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-folder:hover { color: var(--text); border-color: var(--red-dim); }
+
+        select {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 6px 28px 6px 10px;
+            font-family: var(--mono);
+            font-size: 11px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a5568'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        select:focus { outline: none; border-color: var(--red-dim); }
+
+        .btn-apply-all {
+            background: var(--surface2);
+            border: 1px solid var(--border-bright);
+            color: var(--text-mid);
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-family: var(--mono);
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-apply-all:hover { color: var(--text); border-color: var(--red-dim); }
 
         .btn-analyze {
             width: 100%;
@@ -153,7 +289,6 @@
             width: 100%;
             aspect-ratio: 16/9;
             background: #000;
-            cursor: pointer;
             overflow: hidden;
         }
 
@@ -162,38 +297,7 @@
             height: 100%;
             object-fit: cover;
             display: block;
-            transition: transform 0.3s;
         }
-
-        .thumb-wrap:hover img { transform: scale(1.03); }
-
-        .thumb-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .thumb-wrap:hover .thumb-overlay { opacity: 1; }
-
-        .play-btn {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            background: rgba(212, 43, 43, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            transition: transform 0.15s, background 0.15s;
-        }
-
-        .thumb-wrap:hover .play-btn { transform: scale(1.1); background: var(--red); }
-        .play-btn svg { margin-left: 4px; }
 
         .thumb-no-preview {
             width: 100%;
@@ -224,25 +328,7 @@
             margin-bottom: 10px;
         }
 
-        .analyze-controls { display: flex; gap: 8px; }
-
-        select {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            padding: 6px 28px 6px 10px;
-            font-family: var(--mono);
-            font-size: 11px;
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a5568'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            flex: 1;
-        }
-
-        select:focus { outline: none; border-color: var(--red-dim); }
+        .analyze-controls { display: flex; gap: 8px; flex-wrap: wrap; }
 
         .btn-download {
             width: 100%;
@@ -348,11 +434,7 @@
             width: 100%;
         }
 
-        .dl-prog-status {
-            font-size: 10px;
-            color: var(--text-mid);
-            margin-bottom: 10px;
-        }
+        .dl-prog-status { font-size: 10px; color: var(--text-mid); margin-bottom: 10px; }
 
         .bar-bg {
             width: 100%;
@@ -407,10 +489,7 @@
             transition: opacity 0.3s;
         }
 
-        .dl-item.done .dl-actions {
-            opacity: 1;
-            pointer-events: all;
-        }
+        .dl-item.done .dl-actions { opacity: 1; pointer-events: all; }
 
         .action-btn {
             background: var(--surface2);
@@ -430,9 +509,68 @@
         .action-btn.open-btn { border-color: rgba(29,185,84,0.3); color: var(--green); }
         .action-btn.open-btn:hover { background: var(--green-glow); }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to   { opacity: 1; transform: translateY(0); }
+        .play-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(212, 43, 43, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transition: transform 0.15s, background 0.15s;
+        }
+
+        .dl-thumb-wrap:hover .play-btn { transform: scale(1.1); background: var(--red); }
+        .play-btn svg { margin-left: 3px; }
+
+        #history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .history-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            animation: slideIn 0.2s ease forwards;
+        }
+
+        .history-thumb {
+            width: 60px;
+            height: 38px;
+            object-fit: cover;
+            border-radius: 4px;
+            background: var(--surface2);
+            flex-shrink: 0;
+        }
+
+        .history-info { flex: 1; min-width: 0; }
+
+        .history-title {
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+
+        .history-meta { font-size: 9px; color: var(--text-dim); }
+        .history-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+        .history-empty {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 11px;
+            padding: 40px 0;
+            letter-spacing: 1px;
         }
 
         #preview-modal {
@@ -494,13 +632,9 @@
             display: block;
         }
 
-        .preview-not-ready {
-            padding: 32px;
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-dim);
-            letter-spacing: 1px;
-            display: none;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
         ::-webkit-scrollbar { width: 4px; }
@@ -512,16 +646,57 @@
 <div class="wrapper">
     <div class="header">
         <h1>YT<span>.</span>DL</h1>
-        <span class="version-tag">v1.4.0</span>
+        <span class="version-tag">v1.5.0</span>
+        <button class="settings-btn" id="settings-btn" onclick="toggleSettings()">SETTINGS</button>
     </div>
 
-    <div class="section-label">Links — one per line or playlist URL</div>
-    <textarea id="urls" rows="3" placeholder="https://youtube.com/watch?v=..."></textarea>
-    <button id="analyze-btn" class="btn-analyze">ANALYZE</button>
+    <div class="settings-dropdown" id="settings-dropdown">
+        <div class="settings-label">Global Options</div>
+        <div class="settings-row">
+            <select id="global-fmt">
+                <option value="video">MP4 Video</option>
+                <option value="audio">MP3 Audio</option>
+            </select>
+            <select id="global-qual">
+                <option value="2160">4K UHD</option>
+                <option value="1080" selected>1080p HD</option>
+                <option value="720">720p</option>
+                <option value="480">480p</option>
+            </select>
+            <select id="global-sub">
+                <option value="none">No Subtitles</option>
+                <option value="download">Download .srt</option>
+                <option value="hardcode">Hardcode</option>
+            </select>
+            <button class="btn-apply-all" onclick="applyToAll()">Apply to all</button>
+        </div>
+    </div>
 
-    <div id="analyze-results"></div>
-    <button id="dl-btn" class="btn-download" style="display:none">START DOWNLOAD</button>
-    <div id="dl-list"></div>
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-btn-download" onclick="switchTab('download', this)">DOWNLOAD</button>
+        <button class="tab-btn" id="tab-btn-history" onclick="switchTab('history', this)">HISTORY</button>
+    </div>
+
+    <div id="tab-download" class="tab-panel active">
+        <div class="folder-row">
+            <span class="folder-path" id="folder-path">Loading...</span>
+            <button class="btn-folder" onclick="selectFolder()">Change</button>
+        </div>
+
+        <div class="section-label">Links — one per line or playlist URL</div>
+        <textarea id="urls" rows="3" placeholder="https://youtube.com/watch?v=..."></textarea>
+
+        <button id="analyze-btn" class="btn-analyze">ANALYZE</button>
+        <div id="analyze-results"></div>
+        <button id="dl-btn" class="btn-download" style="display:none">START DOWNLOAD</button>
+        <div id="dl-list"></div>
+    </div>
+
+    <div id="tab-history" class="tab-panel">
+        <div id="history-list">
+            <div class="history-empty">No downloads yet this session.</div>
+        </div>
+    </div>
 </div>
 
 <div id="preview-modal">
@@ -531,7 +706,6 @@
             <button class="preview-close" id="preview-close">✕</button>
         </div>
         <video id="preview-player" controls></video>
-        <div class="preview-not-ready" id="preview-not-ready">Download the file first to preview it.</div>
     </div>
 </div>
 
@@ -541,7 +715,6 @@
     const analyzeResults = document.getElementById('analyze-results');
     const previewModal = document.getElementById('preview-modal');
     const previewPlayer = document.getElementById('preview-player');
-    const previewNotReady = document.getElementById('preview-not-ready');
 
     document.getElementById('preview-close').addEventListener('click', () => {
         previewModal.classList.remove('open');
@@ -552,6 +725,83 @@
     let analyzedItems = [];
     let pollInterval = null;
     const thumbCache = {};
+
+    fetch('/get_folder').then(r => r.json()).then(d => {
+        document.getElementById('folder-path').textContent = d.folder;
+    });
+
+    function toggleSettings() {
+        const dropdown = document.getElementById('settings-dropdown');
+        const btn = document.getElementById('settings-btn');
+        dropdown.classList.toggle('open');
+        btn.classList.toggle('active');
+    }
+
+    function switchTab(name, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(`tab-${name}`).classList.add('active');
+        btn.classList.add('active');
+        if (name === 'history') loadHistory();
+    }
+
+    async function selectFolder() {
+        const res = await fetch('/select_folder', { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            document.getElementById('folder-path').textContent = data.folder;
+        }
+    }
+
+    function applyToAll() {
+        const fmt = document.getElementById('global-fmt').value;
+        const qual = document.getElementById('global-qual').value;
+        const sub = document.getElementById('global-sub').value;
+
+        analyzedItems.forEach((item, i) => {
+            const fmtEl = document.getElementById(`fmt-${i}`);
+            const qualEl = document.getElementById(`qual-${i}`);
+            const subEl = document.getElementById(`sub-${i}`);
+
+            if (fmtEl) fmtEl.value = fmt;
+
+            if (qualEl) {
+                if (fmt === 'audio') {
+                    qualEl.innerHTML = `
+                        <option value="320">320 kbps</option>
+                        <option value="192">192 kbps</option>
+                        <option value="128">128 kbps</option>
+                    `;
+                } else {
+                    qualEl.innerHTML = (item.heights || [1080, 720, 480]).map(h =>
+                        `<option value="${h}">${h}p${h >= 2160 ? ' 4K' : h >= 1080 ? ' HD' : ''}</option>`
+                    ).join('');
+                }
+                qualEl.value = qual;
+                if (!qualEl.value) qualEl.selectedIndex = 0;
+            }
+
+            if (subEl && !subEl.disabled) subEl.value = sub;
+        });
+    }
+
+    document.getElementById('global-fmt').addEventListener('change', (e) => {
+        const qual = document.getElementById('global-qual');
+        if (e.target.value === 'audio') {
+            qual.innerHTML = `
+                <option value="320">320 kbps</option>
+                <option value="192" selected>192 kbps</option>
+                <option value="128">128 kbps</option>
+            `;
+        } else {
+            qual.innerHTML = `
+                <option value="2160">4K UHD</option>
+                <option value="1080" selected>1080p HD</option>
+                <option value="720">720p</option>
+                <option value="480">480p</option>
+            `;
+        }
+    });
 
     analyzeBtn.addEventListener('click', async () => {
         const urls = document.getElementById('urls').value.trim();
@@ -599,17 +849,18 @@
                 .map(h => `<option value="${h}">${h}p${h >= 2160 ? ' 4K' : h >= 1080 ? ' HD' : ''}</option>`)
                 .join('');
 
+            const subOptions = item.has_subs
+                ? `<select id="sub-${i}">
+                    <option value="none">No Subs</option>
+                    <option value="download">Get .srt</option>
+                    <option value="hardcode">Hardcode</option>
+                   </select>`
+                : `<select id="sub-${i}" disabled style="opacity:0.35;cursor:not-allowed;pointer-events:none">
+                    <option value="none">No Subs Available</option>
+                   </select>`;
+
             el.innerHTML = `
-                <div class="thumb-wrap" id="athumb-${i}">
-                    ${thumbHtml}
-                    <div class="thumb-overlay">
-                        <div class="play-btn">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
-                                <polygon points="5,3 18,10 5,17"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+                <div class="thumb-wrap">${thumbHtml}</div>
                 <div class="analyze-info">
                     <div class="analyze-title">${item.title}</div>
                     <div class="analyze-meta">${item.duration || ''}</div>
@@ -618,9 +869,8 @@
                             <option value="video">MP4 Video</option>
                             <option value="audio">MP3 Audio</option>
                         </select>
-                        <select id="qual-${i}">
-                            ${heightOptions}
-                        </select>
+                        <select id="qual-${i}">${heightOptions}</select>
+                        ${subOptions}
                     </div>
                 </div>
             `;
@@ -662,17 +912,26 @@
 
         const fmt = document.getElementById('fmt-0')?.value || 'video';
         const qual = document.getElementById('qual-0')?.value || '1080';
+        const sub = document.getElementById('sub-0')?.value || 'none';
 
         dlBtn.disabled = true;
         dlBtn.textContent = 'DOWNLOADING...';
-        document.getElementById('dl-list').innerHTML = '';
         analyzeResults.innerHTML = '';
         dlBtn.style.display = 'none';
+        document.getElementById('dl-list').innerHTML = '';
 
         const fd = new FormData();
-        fd.append('items', JSON.stringify(validItems.map(x => ({ url: x.url, title: x.title }))));
+        fd.append('items', JSON.stringify(validItems.map((x, i) => ({
+            url: x.url,
+            title: x.title,
+            thumbnail: x.thumbnail || '',
+            fmt: document.getElementById(`fmt-${i}`)?.value || fmt,
+            qual: document.getElementById(`qual-${i}`)?.value || qual,
+            sub: document.getElementById(`sub-${i}`)?.value || sub,
+        }))));
         fd.append('format_type', fmt);
         fd.append('quality', qual);
+        fd.append('subtitle_mode', sub);
 
         const res = await fetch('/download', { method: 'POST', body: fd });
         const result = await res.json();
@@ -682,6 +941,8 @@
             dlBtn.textContent = 'START DOWNLOAD';
             return;
         }
+
+        dlBtn.style.display = 'block';
 
         pollInterval = setInterval(async () => {
             const dlList = document.getElementById('dl-list');
@@ -699,8 +960,8 @@
                     el.id = `dl-${id}`;
                     el.className = 'dl-item';
 
-                    const thumbImg = thumb.thumbnail
-                        ? `<img src="${thumb.thumbnail}" alt="">`
+                    const thumbImg = (thumb.thumbnail || item.thumbnail)
+                        ? `<img src="${thumb.thumbnail || item.thumbnail}" alt="">`
                         : `<div class="thumb-no-preview">NO PREVIEW</div>`;
 
                     el.innerHTML = `
@@ -717,7 +978,7 @@
                             </div>
                             <div class="dl-thumb-overlay">
                                 <div class="play-btn">
-                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+                                    <svg width="18" height="18" viewBox="0 0 20 20" fill="white">
                                         <polygon points="5,3 18,10 5,17"/>
                                     </svg>
                                 </div>
@@ -765,9 +1026,40 @@
                 pollInterval = null;
                 dlBtn.disabled = false;
                 dlBtn.textContent = 'START DOWNLOAD';
+                loadHistory();
             }
         }, 800);
     });
+
+    async function loadHistory() {
+        const res = await fetch('/history');
+        const data = await res.json();
+        const list = document.getElementById('history-list');
+
+        if (data.length === 0) {
+            list.innerHTML = '<div class="history-empty">No downloads yet this session.</div>';
+            return;
+        }
+
+        list.innerHTML = '';
+        data.slice().reverse().forEach(item => {
+            const fp = (item.filepath || '').replace(/\\/g, '\\\\');
+            const el = document.createElement('div');
+            el.className = 'history-item';
+            el.innerHTML = `
+                ${item.thumbnail ? `<img class="history-thumb" src="${item.thumbnail}" alt="">` : '<div class="history-thumb"></div>'}
+                <div class="history-info">
+                    <div class="history-title">${item.title}</div>
+                    <div class="history-meta">${item.format.toUpperCase()} · ${item.quality}${item.format === 'audio' ? ' kbps' : 'p'}</div>
+                </div>
+                <div class="history-actions">
+                    <button class="action-btn" onclick="showInFolderPath('${fp}')">Folder</button>
+                    <button class="action-btn open-btn" onclick="openFilePath('${fp}')">Open</button>
+                </div>
+            `;
+            list.appendChild(el);
+        });
+    }
 
     async function showInFolder(id) {
         const fp = document.getElementById(`dl-${id}`)?.dataset.filepath;
@@ -785,14 +1077,25 @@
         await fetch('/open_file', { method: 'POST', body: fd });
     }
 
+    async function showInFolderPath(fp) {
+        if (!fp) return;
+        const fd = new FormData();
+        fd.append('filepath', fp);
+        await fetch('/show_in_folder', { method: 'POST', body: fd });
+    }
+
+    async function openFilePath(fp) {
+        if (!fp) return;
+        const fd = new FormData();
+        fd.append('filepath', fp);
+        await fetch('/open_file', { method: 'POST', body: fd });
+    }
+
     function previewFile(id) {
         const el = document.getElementById(`dl-${id}`);
         const fp = el?.dataset.filepath;
         if (!fp) return;
-
         document.getElementById('preview-title').textContent = el.querySelector('.dl-bottom-title').textContent;
-        previewNotReady.style.display = 'none';
-        previewPlayer.style.display = 'block';
         previewPlayer.src = `/preview_file?filepath=${encodeURIComponent(fp)}`;
         previewModal.classList.add('open');
         previewPlayer.play();

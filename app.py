@@ -30,6 +30,9 @@ def no_cache(response):
 
 downloads = {}
 downloads_lock = threading.Lock()
+history = []
+history_lock = threading.Lock()
+window_ref = None
 
 def remove_ansi_colors(text):
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
@@ -84,7 +87,9 @@ def analyze():
                         'thumbnail': thumb,
                         'duration': entry.get('duration_string', ''),
                         'url': entry.get('url') or entry.get('webpage_url') or f"https://www.youtube.com/watch?v={entry['id']}",
-                        'heights': [1080, 720, 480]
+                        'heights': [1080, 720, 480],
+                        'has_subs': False,
+                        'sub_langs': []
                     })
             else:
                 formats = info.get('formats', [])
@@ -93,13 +98,20 @@ def analyze():
                     if f.get('height') and f.get('vcodec') != 'none'
                 ), reverse=True)
 
+                subs = info.get('subtitles', {})
+                auto_subs = info.get('automatic_captions', {})
+                has_subs = len(subs) > 0 or len(auto_subs) > 0
+                sub_langs = list(subs.keys()) + [f"{k} (auto)" for k in auto_subs.keys()]
+
                 results.append({
                     'type': 'video',
                     'title': info.get('title', 'Unknown'),
                     'thumbnail': info.get('thumbnail', ''),
                     'duration': info.get('duration_string', ''),
                     'url': url,
-                    'heights': heights if heights else [1080, 720, 480]
+                    'heights': heights if heights else [1080, 720, 480],
+                    'has_subs': has_subs,
+                    'sub_langs': sub_langs[:5]
                 })
         except Exception as e:
             results.append({'type': 'error', 'url': url, 'message': str(e)})
@@ -111,11 +123,32 @@ def progress():
     with downloads_lock:
         return jsonify(downloads)
 
+@app.route('/history')
+def get_history():
+    with history_lock:
+        return jsonify(history)
+
+@app.route('/select_folder', methods=['POST'])
+def select_folder():
+    global DOWNLOAD_FOLDER, window_ref
+    if window_ref is None:
+        return jsonify({"status": "error", "message": "Window not ready."})
+    result = window_ref.create_file_dialog(webview.FOLDER_DIALOG)
+    if result and len(result) > 0:
+        DOWNLOAD_FOLDER = result[0]
+        return jsonify({"status": "ok", "folder": DOWNLOAD_FOLDER})
+    return jsonify({"status": "cancelled"})
+
+@app.route('/get_folder')
+def get_folder():
+    return jsonify({"folder": DOWNLOAD_FOLDER})
+
 @app.route('/download', methods=['POST'])
 def download():
     items_json = request.form.get('items')
     format_type = request.form.get('format_type')
     quality = request.form.get('quality')
+    subtitle_mode = request.form.get('subtitle_mode', 'none')
 
     if not items_json:
         return jsonify({"status": "error", "message": "No items provided."})
@@ -138,6 +171,7 @@ def download():
                 'done': False,
                 'error': False,
                 'filepath': None,
+                'thumbnail': entry.get('thumbnail', ''),
             }
 
     def run_downloads():
@@ -146,7 +180,12 @@ def download():
             with downloads_lock:
                 downloads[vid_id]['status'] = 'Starting...'
 
-            ext = 'mp3' if format_type == 'audio' else 'mp4'
+            # Per-item settings if provided, fallback to global
+            item_fmt = entry.get('fmt', format_type)
+            item_qual = entry.get('qual', quality)
+            item_sub = entry.get('sub', subtitle_mode)
+
+            ext = 'mp3' if item_fmt == 'audio' else 'mp4'
             out_template = os.path.join(DOWNLOAD_FOLDER, f'ytdl_{vid_id}_%(title)s.%(ext)s')
 
             ydl_opts = {
@@ -158,17 +197,31 @@ def download():
                 'ffmpeg_location': app_path,
             }
 
-            if format_type == 'audio':
+            if item_fmt == 'audio':
                 ydl_opts.update({
                     'format': 'bestaudio/best',
-                    'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': quality}]
+                    'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': item_qual}]
                 })
             else:
                 ydl_opts.update({
-                    'format': f'bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best',
+                    'format': f'bestvideo[height<={item_qual}]+bestaudio/best[height<={item_qual}]/best',
                     'merge_output_format': 'mp4',
                     'postprocessor_args': {'ffmpeg': ['-c:a', 'aac', '-b:a', '192k']}
                 })
+
+            if item_sub == 'download' and item_fmt == 'video':
+                ydl_opts.update({
+                    'writesubtitles': True,
+                    'writeautomaticsub': True,
+                    'subtitleslangs': ['en'],
+                })
+            elif item_sub == 'hardcode' and item_fmt == 'video':
+                ydl_opts.update({
+                    'writesubtitles': True,
+                    'writeautomaticsub': True,
+                    'subtitleslangs': ['en'],
+                })
+                ydl_opts['postprocessors'] = ydl_opts.get('postprocessors', []) + [{'key': 'FFmpegEmbedSubtitle'}]
 
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -186,6 +239,15 @@ def download():
                     downloads[vid_id]['percent'] = 100.0
                     downloads[vid_id]['done'] = True
                     downloads[vid_id]['filepath'] = filepath
+
+                with history_lock:
+                    history.append({
+                        'title': entry['title'],
+                        'filepath': filepath,
+                        'thumbnail': entry.get('thumbnail', ''),
+                        'format': item_fmt,
+                        'quality': item_qual,
+                    })
 
             except Exception as e:
                 with downloads_lock:
@@ -228,5 +290,6 @@ if __name__ == '__main__':
     t = threading.Thread(target=start_server)
     t.daemon = True
     t.start()
-    webview.create_window('YT Downloader', 'http://localhost:5000', width=520, height=850, resizable=True)
+
+    window_ref = webview.create_window('YT Downloader', 'http://localhost:5000', width=560, height=900, resizable=True)
     webview.start()
