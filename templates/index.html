@@ -17,6 +17,7 @@
             --red-glow: rgba(212, 43, 43, 0.2);
             --green: #1db954;
             --green-glow: rgba(29, 185, 84, 0.15);
+            --yellow: #f59e0b;
             --text: #e8eaf0;
             --text-dim: #4a5568;
             --text-mid: #8892a4;
@@ -83,7 +84,9 @@
             letter-spacing: 1px;
         }
 
-        .settings-btn {
+        .header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+        .settings-btn, .update-btn {
             background: var(--surface2);
             border: 1px solid var(--border-bright);
             color: var(--text-mid);
@@ -94,11 +97,13 @@
             letter-spacing: 1px;
             cursor: pointer;
             transition: all 0.2s;
-            margin-left: auto;
         }
 
-        .settings-btn:hover { color: var(--text); border-color: var(--red-dim); }
+        .settings-btn:hover, .update-btn:hover { color: var(--text); border-color: var(--red-dim); }
         .settings-btn.active { color: var(--text); border-color: var(--red-dim); background: var(--surface); }
+        .update-btn { border-color: rgba(29,185,84,0.3); color: var(--green); }
+        .update-btn:hover { background: var(--green-glow); }
+        .update-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .settings-dropdown {
             display: none;
@@ -125,7 +130,24 @@
             gap: 8px;
             align-items: center;
             flex-wrap: wrap;
+            margin-bottom: 10px;
         }
+
+        .settings-row:last-child { margin-bottom: 0; }
+
+        .speed-input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 6px 10px;
+            font-family: var(--mono);
+            font-size: 11px;
+            width: 100px;
+        }
+
+        .speed-input:focus { outline: none; border-color: var(--red-dim); }
+        .speed-unit { font-size: 10px; color: var(--text-dim); }
 
         .tabs {
             display: flex;
@@ -183,6 +205,11 @@
             box-shadow: 0 0 0 3px var(--red-glow);
         }
 
+        textarea.drag-over {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px var(--green-glow);
+        }
+
         .folder-row {
             display: flex;
             align-items: center;
@@ -236,6 +263,14 @@
 
         select:focus { outline: none; border-color: var(--red-dim); }
 
+        select[multiple] {
+            appearance: auto;
+            background-image: none;
+            padding: 6px 10px;
+            height: 80px;
+            border-radius: 6px;
+        }
+
         .btn-apply-all {
             background: var(--surface2);
             border: 1px solid var(--border-bright);
@@ -276,12 +311,52 @@
             gap: 10px;
         }
 
+        /* Drag to reorder */
         .analyze-item {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
             animation: slideIn 0.2s ease forwards;
+            cursor: grab;
+            transition: opacity 0.2s, border-color 0.2s;
+        }
+
+        .analyze-item.dragging { opacity: 0.4; cursor: grabbing; }
+        .analyze-item.drag-over-item { border-color: var(--red-dim); }
+
+        .skeleton-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .skeleton-thumb {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        .skeleton-info { padding: 12px 14px; }
+
+        .skeleton-line {
+            height: 10px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-line.short { width: 40%; }
+        .skeleton-line.medium { width: 70%; }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         .thumb-wrap {
@@ -311,6 +386,19 @@
             letter-spacing: 1px;
         }
 
+        .drag-handle {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 4px;
+            padding: 3px 5px;
+            color: var(--text-dim);
+            font-size: 10px;
+            cursor: grab;
+            user-select: none;
+        }
+
         .analyze-info { padding: 12px 14px; }
 
         .analyze-title {
@@ -328,7 +416,132 @@
             margin-bottom: 10px;
         }
 
-        .analyze-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+        .analyze-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
+
+        .sub-lang-wrap { display: flex; flex-direction: column; gap: 4px; }
+        .sub-lang-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
+
+        /* Clip input */
+        .clip-toggle {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-dim);
+            padding: 5px 10px;
+            font-family: var(--mono);
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .clip-toggle:hover { color: var(--text); border-color: var(--yellow); }
+        .clip-toggle.active { color: var(--yellow); border-color: var(--yellow); background: rgba(245,158,11,0.08); }
+
+        .clip-inputs {
+            display: none;
+            gap: 6px;
+            align-items: center;
+            width: 100%;
+            margin-top: 6px;
+        }
+
+        .clip-inputs.open { display: flex; }
+
+        .clip-input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text);
+            padding: 5px 8px;
+            font-family: var(--mono);
+            font-size: 11px;
+            width: 80px;
+        }
+
+        .clip-input:focus { outline: none; border-color: var(--yellow); }
+        .clip-label { font-size: 9px; color: var(--text-dim); }
+
+        /* Playlist entries */
+        .playlist-entries {
+            border-top: 1px solid var(--border);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .playlist-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .playlist-entry:hover { background: var(--surface2); }
+        .playlist-entry:last-child { border-bottom: none; }
+
+        .playlist-entry-check {
+            width: 14px;
+            height: 14px;
+            border: 1px solid var(--border-bright);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .playlist-entry.selected .playlist-entry-check {
+            background: var(--green);
+            border-color: var(--green);
+        }
+
+        .playlist-entry-thumb {
+            width: 48px;
+            height: 30px;
+            object-fit: cover;
+            border-radius: 3px;
+            background: var(--surface2);
+            flex-shrink: 0;
+        }
+
+        .playlist-entry-title {
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .playlist-entry-duration {
+            font-size: 10px;
+            color: var(--text-dim);
+            flex-shrink: 0;
+        }
+
+        .playlist-controls {
+            display: flex;
+            gap: 6px;
+            padding: 8px 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-small {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-mid);
+            padding: 4px 10px;
+            font-family: var(--mono);
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-small:hover { color: var(--text); border-color: var(--border-bright); }
 
         .btn-download {
             width: 100%;
@@ -358,6 +571,25 @@
             cursor: not-allowed;
         }
 
+        /* Cancel all button */
+        .btn-cancel-all {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(212,43,43,0.4);
+            color: var(--red);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .btn-cancel-all:hover { background: var(--red-glow); }
+
         #dl-list {
             margin-top: 20px;
             display: flex;
@@ -374,8 +606,9 @@
             animation: slideIn 0.25s ease forwards;
         }
 
-        .dl-item.done  { border-color: rgba(29, 185, 84, 0.25); }
-        .dl-item.error { border-color: rgba(212, 43, 43, 0.35); }
+        .dl-item.done       { border-color: rgba(29, 185, 84, 0.25); }
+        .dl-item.error      { border-color: rgba(212, 43, 43, 0.35); }
+        .dl-item.cancelled  { border-color: rgba(245, 158, 11, 0.3); opacity: 0.6; }
 
         .dl-thumb-wrap {
             position: relative;
@@ -421,7 +654,8 @@
         }
 
         .dl-item.done .dl-progress-overlay,
-        .dl-item.error .dl-progress-overlay { display: none; }
+        .dl-item.error .dl-progress-overlay,
+        .dl-item.cancelled .dl-progress-overlay { display: none; }
 
         .dl-prog-title {
             font-size: 11px;
@@ -484,12 +718,7 @@
             display: flex;
             gap: 6px;
             flex-shrink: 0;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
         }
-
-        .dl-item.done .dl-actions { opacity: 1; pointer-events: all; }
 
         .action-btn {
             background: var(--surface2);
@@ -508,6 +737,12 @@
         .action-btn:hover { border-color: var(--border-bright); color: var(--text); }
         .action-btn.open-btn { border-color: rgba(29,185,84,0.3); color: var(--green); }
         .action-btn.open-btn:hover { background: var(--green-glow); }
+        .action-btn.retry-btn { border-color: rgba(212,43,43,0.3); color: var(--red); }
+        .action-btn.retry-btn:hover { background: var(--red-glow); }
+        .action-btn.cancel-btn { border-color: rgba(245,158,11,0.3); color: var(--yellow); }
+        .action-btn.cancel-btn:hover { background: rgba(245,158,11,0.08); }
+        .action-btn.remove-btn { border-color: rgba(212,43,43,0.2); color: var(--text-dim); }
+        .action-btn.remove-btn:hover { color: var(--red); border-color: var(--red); }
 
         .play-btn {
             width: 44px;
@@ -646,8 +881,11 @@
 <div class="wrapper">
     <div class="header">
         <h1>YT<span>.</span>DL</h1>
-        <span class="version-tag">v1.5.0</span>
-        <button class="settings-btn" id="settings-btn" onclick="toggleSettings()">SETTINGS</button>
+        <span class="version-tag">v2.0.0</span>
+        <div class="header-actions">
+            <button class="update-btn" id="update-btn" onclick="updateYtdlp()">UPDATE</button>
+            <button class="settings-btn" id="settings-btn" onclick="toggleSettings()">SETTINGS</button>
+        </div>
     </div>
 
     <div class="settings-dropdown" id="settings-dropdown">
@@ -670,6 +908,23 @@
             </select>
             <button class="btn-apply-all" onclick="applyToAll()">Apply to all</button>
         </div>
+        <div class="settings-label" style="margin-top:12px">Speed Limit</div>
+        <div class="settings-row">
+            <input type="number" class="speed-input" id="speed-limit" placeholder="0 = unlimited" min="0">
+            <span class="speed-unit">KB/s</span>
+            <button class="btn-apply-all" onclick="saveSpeedLimit()">Save</button>
+        </div>
+        <div class="settings-label" style="margin-top:12px">Concurrent Downloads</div>
+        <div class="settings-row">
+            <select id="max-concurrent">
+                <option value="1">1 at a time</option>
+                <option value="2">2 at a time</option>
+                <option value="3">3 at a time</option>
+                <option value="4">4 at a time</option>
+                <option value="5">5 at a time</option>
+            </select>
+            <button class="btn-apply-all" onclick="saveMaxConcurrent()">Save</button>
+        </div>
     </div>
 
     <div class="tabs">
@@ -684,11 +939,12 @@
         </div>
 
         <div class="section-label">Links — one per line or playlist URL</div>
-        <textarea id="urls" rows="3" placeholder="https://youtube.com/watch?v=..."></textarea>
+        <textarea id="urls" rows="3" placeholder="Paste links or drag & drop here..."></textarea>
 
         <button id="analyze-btn" class="btn-analyze">ANALYZE</button>
         <div id="analyze-results"></div>
         <button id="dl-btn" class="btn-download" style="display:none">START DOWNLOAD</button>
+        <button id="cancel-all-btn" class="btn-cancel-all" onclick="cancelAll()">CANCEL ALL</button>
         <div id="dl-list"></div>
     </div>
 
@@ -712,9 +968,11 @@
 <script>
     const analyzeBtn = document.getElementById('analyze-btn');
     const dlBtn = document.getElementById('dl-btn');
+    const cancelAllBtn = document.getElementById('cancel-all-btn');
     const analyzeResults = document.getElementById('analyze-results');
     const previewModal = document.getElementById('preview-modal');
     const previewPlayer = document.getElementById('preview-player');
+    const urlsTextarea = document.getElementById('urls');
 
     document.getElementById('preview-close').addEventListener('click', () => {
         previewModal.classList.remove('open');
@@ -726,8 +984,44 @@
     let pollInterval = null;
     const thumbCache = {};
 
-    fetch('/get_folder').then(r => r.json()).then(d => {
+    // Drag to reorder state
+    let dragSrcEl = null;
+
+    fetch('/get_settings').then(r => r.json()).then(d => {
         document.getElementById('folder-path').textContent = d.folder;
+        document.getElementById('speed-limit').value = d.speed_limit || '';
+        const mc = document.getElementById('max-concurrent');
+        if (mc) mc.value = String(d.max_concurrent || 1);
+    });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            const fd = new FormData();
+            fd.append('width', window.outerWidth);
+            fd.append('height', window.outerHeight);
+            fetch('/save_window_size', { method: 'POST', body: fd });
+        }, 500);
+    });
+
+    urlsTextarea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        urlsTextarea.classList.add('drag-over');
+    });
+
+    urlsTextarea.addEventListener('dragleave', () => {
+        urlsTextarea.classList.remove('drag-over');
+    });
+
+    urlsTextarea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        urlsTextarea.classList.remove('drag-over');
+        const text = e.dataTransfer.getData('text');
+        if (text) {
+            const current = urlsTextarea.value.trim();
+            urlsTextarea.value = current ? current + '\n' + text : text;
+        }
     });
 
     function toggleSettings() {
@@ -751,6 +1045,44 @@
         if (data.status === 'ok') {
             document.getElementById('folder-path').textContent = data.folder;
         }
+    }
+
+    async function saveSpeedLimit() {
+        const val = document.getElementById('speed-limit').value || '0';
+        const fd = new FormData();
+        fd.append('limit', val);
+        await fetch('/set_speed_limit', { method: 'POST', body: fd });
+    }
+
+    async function saveMaxConcurrent() {
+        const val = document.getElementById('max-concurrent').value || '1';
+        const fd = new FormData();
+        fd.append('value', val);
+        await fetch('/set_max_concurrent', { method: 'POST', body: fd });
+    }
+
+    async function updateYtdlp() {
+        const btn = document.getElementById('update-btn');
+        btn.disabled = true;
+        btn.textContent = 'UPDATING...';
+        await fetch('/update_ytdlp', { method: 'POST' });
+
+        const interval = setInterval(async () => {
+            const r = await fetch('/progress');
+            const data = await r.json();
+            const u = data['__update__'];
+            if (u) {
+                if (u.done) {
+                    btn.textContent = 'UPDATED!';
+                    setTimeout(() => { btn.textContent = 'UPDATE'; btn.disabled = false; }, 2000);
+                    clearInterval(interval);
+                } else if (u.error) {
+                    btn.textContent = 'FAILED';
+                    setTimeout(() => { btn.textContent = 'UPDATE'; btn.disabled = false; }, 2000);
+                    clearInterval(interval);
+                }
+            }
+        }, 1000);
     }
 
     function applyToAll() {
@@ -803,6 +1135,66 @@
         }
     });
 
+    // Drag to reorder analyze items
+    function addDragHandlers(el) {
+        el.addEventListener('dragstart', (e) => {
+            dragSrcEl = el;
+            el.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        el.addEventListener('dragend', () => {
+            el.classList.remove('dragging');
+            document.querySelectorAll('.analyze-item').forEach(item => item.classList.remove('drag-over-item'));
+        });
+
+        el.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (el !== dragSrcEl) el.classList.add('drag-over-item');
+        });
+
+        el.addEventListener('dragleave', () => {
+            el.classList.remove('drag-over-item');
+        });
+
+        el.addEventListener('drop', (e) => {
+            e.preventDefault();
+            el.classList.remove('drag-over-item');
+            if (dragSrcEl && dragSrcEl !== el) {
+                const container = document.getElementById('analyze-results');
+                const items = [...container.querySelectorAll('.analyze-item')];
+                const srcIdx = items.indexOf(dragSrcEl);
+                const dstIdx = items.indexOf(el);
+
+                if (srcIdx < dstIdx) {
+                    container.insertBefore(dragSrcEl, el.nextSibling);
+                } else {
+                    container.insertBefore(dragSrcEl, el);
+                }
+
+                // Reorder analyzedItems array
+                const moved = analyzedItems.splice(srcIdx, 1)[0];
+                analyzedItems.splice(dstIdx, 0, moved);
+
+                // Update thumbCache keys
+                rebuildThumbCache();
+            }
+        });
+    }
+
+    function rebuildThumbCache() {
+        const container = document.getElementById('analyze-results');
+        const items = [...container.querySelectorAll('.analyze-item')];
+        items.forEach((el, newIdx) => {
+            const oldIdx = el.dataset.idx;
+            if (oldIdx !== undefined) {
+                thumbCache[String(newIdx)] = thumbCache[String(oldIdx)];
+                el.dataset.idx = newIdx;
+            }
+        });
+    }
+
     analyzeBtn.addEventListener('click', async () => {
         const urls = document.getElementById('urls').value.trim();
         if (!urls) return;
@@ -813,12 +1205,27 @@
         dlBtn.style.display = 'none';
         analyzedItems = [];
 
+        const urlCount = urls.split('\n').filter(u => u.trim()).length;
+        for (let s = 0; s < Math.min(urlCount, 3); s++) {
+            const sk = document.createElement('div');
+            sk.className = 'skeleton-item';
+            sk.innerHTML = `
+                <div class="skeleton-thumb"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line short"></div>
+                </div>
+            `;
+            analyzeResults.appendChild(sk);
+        }
+
         const fd = new FormData();
         fd.append('urls', urls);
 
         const res = await fetch('/analyze', { method: 'POST', body: fd });
         const data = await res.json();
 
+        analyzeResults.innerHTML = '';
         analyzeBtn.disabled = false;
         analyzeBtn.textContent = 'ANALYZE';
 
@@ -830,8 +1237,11 @@
 
             const el = document.createElement('div');
             el.className = 'analyze-item';
+            el.draggable = true;
+            el.dataset.idx = i;
 
             if (item.type === 'error') {
+                el.draggable = false;
                 el.innerHTML = `
                     <div class="analyze-info">
                         <div class="analyze-title" style="color:var(--red)">Error</div>
@@ -849,36 +1259,91 @@
                 .map(h => `<option value="${h}">${h}p${h >= 2160 ? ' 4K' : h >= 1080 ? ' HD' : ''}</option>`)
                 .join('');
 
-            const subOptions = item.has_subs
-                ? `<select id="sub-${i}">
-                    <option value="none">No Subs</option>
-                    <option value="download">Get .srt</option>
-                    <option value="hardcode">Hardcode</option>
-                   </select>`
-                : `<select id="sub-${i}" disabled style="opacity:0.35;cursor:not-allowed;pointer-events:none">
+            const subHtml = !item.has_subs
+                ? `<select id="sub-${i}" disabled style="opacity:0.35;cursor:not-allowed;pointer-events:none">
                     <option value="none">No Subs Available</option>
-                   </select>`;
+                   </select>`
+                : `<div class="sub-lang-wrap">
+                    <select id="sub-${i}">
+                        <option value="none">No Subs</option>
+                        <option value="download">Get .srt</option>
+                        <option value="hardcode">Hardcode</option>
+                    </select>
+                    <div class="sub-lang-label">Languages (multi-select)</div>
+                    <select id="langs-${i}" multiple size="3">
+                        ${item.sub_langs.map(l => `<option value="${l.code}">${l.label}</option>`).join('')}
+                    </select>
+                   </div>`;
+
+            let playlistHtml = '';
+            if (item.type === 'playlist') {
+                const entriesHtml = item.entries.map((e, ei) => `
+                    <div class="playlist-entry selected" data-item="${i}" data-entry="${ei}">
+                        <div class="playlist-entry-check">
+                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                <path d="M1 4l3 3 5-6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        ${e.thumbnail ? `<img class="playlist-entry-thumb" src="${e.thumbnail}" alt="">` : '<div class="playlist-entry-thumb"></div>'}
+                        <div class="playlist-entry-title">${e.title}</div>
+                        <div class="playlist-entry-duration">${e.duration || ''}</div>
+                    </div>
+                `).join('');
+
+                playlistHtml = `
+                    <div class="playlist-controls">
+                        <button class="btn-small" onclick="selectAllEntries(${i})">Select all</button>
+                        <button class="btn-small" onclick="deselectAllEntries(${i})">Deselect all</button>
+                        <span style="font-size:10px;color:var(--text-dim);margin-left:auto" id="sel-count-${i}">${item.entries.length} selected</span>
+                    </div>
+                    <div class="playlist-entries" id="playlist-entries-${i}">
+                        ${entriesHtml}
+                    </div>
+                `;
+            }
 
             el.innerHTML = `
-                <div class="thumb-wrap">${thumbHtml}</div>
+                <div class="thumb-wrap">
+                    ${thumbHtml}
+                    <div class="drag-handle">⠿</div>
+                </div>
                 <div class="analyze-info">
                     <div class="analyze-title">${item.title}</div>
-                    <div class="analyze-meta">${item.duration || ''}</div>
+                    <div class="analyze-meta">${item.type === 'playlist' ? `${item.entries.length} videos` : (item.duration || '')}</div>
                     <div class="analyze-controls">
                         <select id="fmt-${i}">
                             <option value="video">MP4 Video</option>
                             <option value="audio">MP3 Audio</option>
                         </select>
                         <select id="qual-${i}">${heightOptions}</select>
-                        ${subOptions}
+                        ${subHtml}
+                        <button class="clip-toggle" id="clip-toggle-${i}" onclick="toggleClip(${i})">Clip</button>
+                    </div>
+                    <div class="clip-inputs" id="clip-inputs-${i}">
+                        <span class="clip-label">Start</span>
+                        <input type="number" class="clip-input" id="clip-start-${i}" placeholder="0" min="0">
+                        <span class="clip-label">End</span>
+                        <input type="number" class="clip-input" id="clip-end-${i}" placeholder="sec" min="0">
+                        <span class="clip-label">sec</span>
                     </div>
                 </div>
+                ${playlistHtml}
             `;
 
             el.querySelector(`#fmt-${i}`).addEventListener('change', (e) => {
                 updateQualitySelect(el.querySelector(`#qual-${i}`), e.target.value, item.heights || [1080, 720, 480]);
             });
 
+            if (item.type === 'playlist') {
+                el.querySelectorAll('.playlist-entry').forEach(entryEl => {
+                    entryEl.addEventListener('click', () => {
+                        entryEl.classList.toggle('selected');
+                        updateSelCount(i);
+                    });
+                });
+            }
+
+            addDragHandlers(el);
             analyzeResults.appendChild(el);
         });
 
@@ -886,6 +1351,34 @@
             dlBtn.style.display = 'block';
         }
     });
+
+    function toggleClip(i) {
+        const inputs = document.getElementById(`clip-inputs-${i}`);
+        const btn = document.getElementById(`clip-toggle-${i}`);
+        inputs.classList.toggle('open');
+        btn.classList.toggle('active');
+    }
+
+    function updateSelCount(itemIdx) {
+        const container = document.getElementById(`playlist-entries-${itemIdx}`);
+        const countEl = document.getElementById(`sel-count-${itemIdx}`);
+        if (!container || !countEl) return;
+        const total = container.querySelectorAll('.playlist-entry').length;
+        const selected = container.querySelectorAll('.playlist-entry.selected').length;
+        countEl.textContent = `${selected} / ${total} selected`;
+    }
+
+    function selectAllEntries(itemIdx) {
+        const container = document.getElementById(`playlist-entries-${itemIdx}`);
+        container?.querySelectorAll('.playlist-entry').forEach(e => e.classList.add('selected'));
+        updateSelCount(itemIdx);
+    }
+
+    function deselectAllEntries(itemIdx) {
+        const container = document.getElementById(`playlist-entries-${itemIdx}`);
+        container?.querySelectorAll('.playlist-entry').forEach(e => e.classList.remove('selected'));
+        updateSelCount(itemIdx);
+    }
 
     function updateQualitySelect(sel, format, heights) {
         if (format === 'audio') {
@@ -901,6 +1394,39 @@
         }
     }
 
+    function getSelectedLangs(i) {
+        const sel = document.getElementById(`langs-${i}`);
+        if (!sel) return ['en'];
+        const selected = Array.from(sel.selectedOptions).map(o => o.value);
+        return selected.length > 0 ? selected : ['en'];
+    }
+
+    function getSelectedEntries(item, itemIdx) {
+        if (item.type !== 'playlist') return null;
+        const container = document.getElementById(`playlist-entries-${itemIdx}`);
+        if (!container) return item.entries;
+        const selectedEls = container.querySelectorAll('.playlist-entry.selected');
+        const selectedIndices = Array.from(selectedEls).map(e => parseInt(e.dataset.entry));
+        return item.entries.filter((_, idx) => selectedIndices.includes(idx));
+    }
+
+    async function cancelAll() {
+        await fetch('/cancel_all', { method: 'POST' });
+        cancelAllBtn.style.display = 'none';
+        dlBtn.disabled = false;
+        dlBtn.textContent = 'START DOWNLOAD';
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+        // Remove all non-done, non-error items from UI
+        document.querySelectorAll('.dl-item').forEach(el => {
+            if (!el.classList.contains('done') && !el.classList.contains('error')) {
+                el.remove();
+            }
+        });
+    }
+
     dlBtn.addEventListener('click', async () => {
         const validItems = analyzedItems.filter(x => x.type !== 'error');
         if (validItems.length === 0) return;
@@ -910,28 +1436,65 @@
             pollInterval = null;
         }
 
-        const fmt = document.getElementById('fmt-0')?.value || 'video';
-        const qual = document.getElementById('qual-0')?.value || '1080';
-        const sub = document.getElementById('sub-0')?.value || 'none';
+        // Read all values before clearing DOM
+        const itemsToSend = [];
+        analyzedItems.forEach((x, i) => {
+            if (x.type === 'error') return;
+
+            const fmt = document.getElementById(`fmt-${i}`)?.value || 'video';
+            const qual = document.getElementById(`qual-${i}`)?.value || '1080';
+            const sub = document.getElementById(`sub-${i}`)?.value || 'none';
+            const subLangs = getSelectedLangs(i);
+
+            const clipInputsOpen = document.getElementById(`clip-inputs-${i}`)?.classList.contains('open');
+            const clipStart = clipInputsOpen ? (document.getElementById(`clip-start-${i}`)?.value || null) : null;
+            const clipEnd = clipInputsOpen ? (document.getElementById(`clip-end-${i}`)?.value || null) : null;
+
+            if (x.type === 'playlist') {
+                const selectedEntries = getSelectedEntries(x, i);
+                selectedEntries.forEach(entry => {
+                    itemsToSend.push({
+                        url: entry.url,
+                        title: entry.title,
+                        thumbnail: entry.thumbnail || '',
+                        fmt, qual, sub,
+                        sub_langs: subLangs,
+                        clip_start: clipStart,
+                        clip_end: clipEnd,
+                    });
+                });
+            } else {
+                itemsToSend.push({
+                    url: x.url,
+                    title: x.title,
+                    thumbnail: x.thumbnail || '',
+                    fmt, qual, sub,
+                    sub_langs: subLangs,
+                    clip_start: clipStart,
+                    clip_end: clipEnd,
+                });
+            }
+        });
+
+        if (itemsToSend.length === 0) return;
+
+        const fmt0 = itemsToSend[0].fmt;
+        const qual0 = itemsToSend[0].qual;
+        const sub0 = itemsToSend[0].sub;
 
         dlBtn.disabled = true;
         dlBtn.textContent = 'DOWNLOADING...';
+        cancelAllBtn.style.display = 'block';
+
         analyzeResults.innerHTML = '';
         dlBtn.style.display = 'none';
         document.getElementById('dl-list').innerHTML = '';
 
         const fd = new FormData();
-        fd.append('items', JSON.stringify(validItems.map((x, i) => ({
-            url: x.url,
-            title: x.title,
-            thumbnail: x.thumbnail || '',
-            fmt: document.getElementById(`fmt-${i}`)?.value || fmt,
-            qual: document.getElementById(`qual-${i}`)?.value || qual,
-            sub: document.getElementById(`sub-${i}`)?.value || sub,
-        }))));
-        fd.append('format_type', fmt);
-        fd.append('quality', qual);
-        fd.append('subtitle_mode', sub);
+        fd.append('items', JSON.stringify(itemsToSend));
+        fd.append('format_type', fmt0);
+        fd.append('quality', qual0);
+        fd.append('subtitle_mode', sub0);
 
         const res = await fetch('/download', { method: 'POST', body: fd });
         const result = await res.json();
@@ -939,6 +1502,7 @@
         if (result.status !== 'success') {
             dlBtn.disabled = false;
             dlBtn.textContent = 'START DOWNLOAD';
+            cancelAllBtn.style.display = 'none';
             return;
         }
 
@@ -952,6 +1516,7 @@
             const data = await r.json();
 
             for (const [id, item] of Object.entries(data)) {
+                if (item.is_update) continue;
                 const thumb = thumbCache[id] || { thumbnail: '', title: item.title };
                 let el = document.getElementById(`dl-${id}`);
 
@@ -986,9 +1551,12 @@
                         </div>
                         <div class="dl-bottom">
                             <div class="dl-bottom-title">${item.title}</div>
-                            <div class="dl-actions">
-                                <button class="action-btn" onclick="showInFolder('${id}')">Folder</button>
-                                <button class="action-btn open-btn" onclick="openFile('${id}')">Open</button>
+                            <div class="dl-actions" id="actions-${id}">
+                                <button class="action-btn cancel-btn" id="cancel-btn-${id}" onclick="cancelOne('${id}')">Cancel</button>
+                                <button class="action-btn retry-btn" id="retry-${id}" onclick="retryDownload('${id}')" style="display:none">Retry</button>
+                                <button class="action-btn" id="folder-btn-${id}" onclick="showInFolder('${id}')" style="display:none">Folder</button>
+                                <button class="action-btn open-btn" id="open-btn-${id}" onclick="openFile('${id}')" style="display:none">Open</button>
+                                <button class="action-btn remove-btn" id="remove-btn-${id}" onclick="removeItem('${id}')" style="display:none">✕</button>
                             </div>
                         </div>
                     `;
@@ -1015,21 +1583,104 @@
                     el.className = 'dl-item done';
                     if (barEl) barEl.className = 'bar-fill done';
                     if (item.filepath) el.dataset.filepath = item.filepath;
+                    document.getElementById(`cancel-btn-${id}`)?.style.setProperty('display', 'none');
+                    document.getElementById(`folder-btn-${id}`)?.style.setProperty('display', '');
+                    document.getElementById(`open-btn-${id}`)?.style.setProperty('display', '');
+                    document.getElementById(`remove-btn-${id}`)?.style.setProperty('display', '');
+                } else if (item.cancelled) {
+                    el.className = 'dl-item cancelled';
+                    document.getElementById(`cancel-btn-${id}`)?.style.setProperty('display', 'none');
+                    document.getElementById(`remove-btn-${id}`)?.style.setProperty('display', '');
                 } else if (item.error) {
                     el.className = 'dl-item error';
+                    document.getElementById(`cancel-btn-${id}`)?.style.setProperty('display', 'none');
+                    document.getElementById(`retry-${id}`)?.style.setProperty('display', '');
+                    document.getElementById(`remove-btn-${id}`)?.style.setProperty('display', '');
                 }
             }
 
-            const allFinished = Object.values(data).every(x => x.done || x.error);
-            if (allFinished) {
+            const realItems = Object.entries(data).filter(([k]) => k !== '__update__');
+            const allFinished = realItems.every(([, v]) => v.done || v.error || v.cancelled);
+            if (allFinished && realItems.length > 0) {
                 clearInterval(pollInterval);
                 pollInterval = null;
                 dlBtn.disabled = false;
                 dlBtn.textContent = 'START DOWNLOAD';
+                cancelAllBtn.style.display = 'none';
                 loadHistory();
             }
         }, 800);
     });
+
+    async function cancelOne(id) {
+        const fd = new FormData();
+        fd.append('vid_id', id);
+        await fetch('/cancel_download', { method: 'POST', body: fd });
+        document.getElementById(`cancel-btn-${id}`)?.style.setProperty('display', 'none');
+    }
+
+    async function removeItem(id) {
+        const fd = new FormData();
+        fd.append('vid_id', id);
+        await fetch('/remove_download', { method: 'POST', body: fd });
+        document.getElementById(`dl-${id}`)?.remove();
+    }
+
+    async function retryDownload(id) {
+        const retryBtn = document.getElementById(`retry-${id}`);
+        if (retryBtn) retryBtn.style.display = 'none';
+        const el = document.getElementById(`dl-${id}`);
+        if (el) el.className = 'dl-item';
+        document.getElementById(`cancel-btn-${id}`)?.style.setProperty('display', '');
+        document.getElementById(`remove-btn-${id}`)?.style.setProperty('display', 'none');
+
+        const fd = new FormData();
+        fd.append('vid_id', id);
+        await fetch('/retry_download', { method: 'POST', body: fd });
+
+        if (!pollInterval) {
+            pollInterval = setInterval(async () => {
+                const r = await fetch('/progress');
+                const data = await r.json();
+                const realItems = Object.entries(data).filter(([k]) => k !== '__update__');
+                const allFinished = realItems.every(([, v]) => v.done || v.error || v.cancelled);
+                if (allFinished && realItems.length > 0) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    dlBtn.disabled = false;
+                    dlBtn.textContent = 'START DOWNLOAD';
+                    cancelAllBtn.style.display = 'none';
+                    loadHistory();
+                }
+                for (const [rid, item] of realItems) {
+                    if (rid !== id) continue;
+                    const statusEl = document.getElementById(`status-${rid}`);
+                    const barEl = document.getElementById(`bar-${rid}`);
+                    const speedEl = document.getElementById(`speed-${rid}`);
+                    const etaEl = document.getElementById(`eta-${rid}`);
+                    if (statusEl) statusEl.textContent = item.status;
+                    if (barEl) barEl.style.width = item.percent + '%';
+                    if (speedEl) speedEl.textContent = item.speed !== '-' ? item.speed : '—';
+                    if (etaEl) etaEl.textContent = item.eta !== '-' ? `ETA ${item.eta}` : '—';
+                    if (item.done) {
+                        const el2 = document.getElementById(`dl-${rid}`);
+                        if (el2) { el2.className = 'dl-item done'; if (item.filepath) el2.dataset.filepath = item.filepath; }
+                        if (barEl) barEl.className = 'bar-fill done';
+                        document.getElementById(`cancel-btn-${rid}`)?.style.setProperty('display', 'none');
+                        document.getElementById(`folder-btn-${rid}`)?.style.setProperty('display', '');
+                        document.getElementById(`open-btn-${rid}`)?.style.setProperty('display', '');
+                        document.getElementById(`remove-btn-${rid}`)?.style.setProperty('display', '');
+                    } else if (item.error) {
+                        const el2 = document.getElementById(`dl-${rid}`);
+                        if (el2) el2.className = 'dl-item error';
+                        document.getElementById(`cancel-btn-${rid}`)?.style.setProperty('display', 'none');
+                        document.getElementById(`retry-${rid}`)?.style.setProperty('display', '');
+                        document.getElementById(`remove-btn-${rid}`)?.style.setProperty('display', '');
+                    }
+                }
+            }, 800);
+        }
+    }
 
     async function loadHistory() {
         const res = await fetch('/history');
