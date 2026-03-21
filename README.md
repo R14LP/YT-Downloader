@@ -13,6 +13,10 @@ A fast, dark-themed video and audio downloader built with Python and Flask.
 - **MP3 Conversion:** Extract audio at 128, 192, or 320 kbps
 - **Per-Video Progress:** Each video gets its own real-time progress bar with speed and ETA
 - **Playlist Support:** Every video in a playlist listed and downloaded separately
+- **Global Settings:** Set format, quality and subtitles for all videos at once with Apply to All
+- **Subtitle Support:** Download .srt or hardcode subtitles into the video — disabled automatically if video has no subtitles
+- **Download History:** View all downloads from the current session in the History tab
+- **Custom Download Folder:** Change the destination folder at any time
 - **Preview:** Click thumbnail after download to watch in-app
 - **Open / Show in Folder:** Quick access buttons after download completes
 - **Responsive UI:** Dark theme, scales with window size
