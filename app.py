@@ -7,6 +7,7 @@ import threading
 import webview
 import subprocess
 import json
+import shutil
 
 if getattr(sys, 'frozen', False):
     template_folder = os.path.join(sys._MEIPASS, 'templates')
@@ -80,6 +81,15 @@ def get_unique_filepath(folder, title, ext):
     while os.path.exists(os.path.join(folder, f'{base} ({counter}).{ext}')):
         counter += 1
     return os.path.join(folder, f'{base} ({counter}).{ext}')
+
+def get_python_exe():
+    if getattr(sys, 'frozen', False):
+        python_exe = os.path.join(os.path.dirname(sys.executable), 'python.exe')
+        if not os.path.exists(python_exe):
+            python_exe = shutil.which('python') or shutil.which('python3') or 'python'
+    else:
+        python_exe = sys.executable
+    return python_exe
 
 def make_hook(vid_id):
     def progress_hook(d):
@@ -295,11 +305,17 @@ def update_ytdlp():
                 'is_update': True,
             }
         try:
+            python_exe = get_python_exe()
+            kwargs = {
+                'capture_output': True,
+                'text': True,
+            }
+            if sys.platform == 'win32':
+                kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
+
             result = subprocess.run(
-                [sys.executable, '-m', 'pip', 'install', '--upgrade', 'yt-dlp', '--quiet'],
-                creationflags=subprocess.CREATE_NO_WINDOW,
-                capture_output=True,
-                text=True
+                [python_exe, '-m', 'pip', 'install', '--upgrade', 'yt-dlp', '--quiet'],
+                **kwargs
             )
             success = result.returncode == 0
             with downloads_lock:
@@ -394,7 +410,6 @@ def _run_single(vid_id, entry, format_type, quality, subtitle_mode, subtitle_lan
     if speed_limit > 0:
         ydl_opts['ratelimit'] = speed_limit * 1024
 
-    # Clip range
     if clip_start is not None or clip_end is not None:
         start_sec = float(clip_start or 0)
         end_sec = float(clip_end) if clip_end else None
@@ -457,7 +472,6 @@ def _run_single(vid_id, entry, format_type, quality, subtitle_mode, subtitle_lan
         err_msg = str(e)
         is_cancelled = 'Cancelled' in err_msg or cancel_flags.get(vid_id, False)
 
-        # Clean up temp files
         for f in os.listdir(DOWNLOAD_FOLDER):
             if f.startswith(temp_prefix):
                 try:
