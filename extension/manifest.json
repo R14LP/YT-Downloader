@@ -22,5 +22,6 @@
     "gecko": {
       "id": "grab@r14lp"
     }
-  }
+  },
+  "data_collection_permissions": "no_data_collected"
 }
