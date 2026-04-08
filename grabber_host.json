@@ -1,0 +1,9 @@
+{
+  "name": "grabber_host",
+  "description": "Grabber",
+  "path": "C:\\Grabber\\native_host.exe",
+  "type": "stdio",
+  "allowed_extensions": [
+    "grab@r14lp"
+  ]
+}

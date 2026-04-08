@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YT Downloader</title>
+    <title>Grabber</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #060809;
-            --surface: #0c0f14;
-            --surface2: #111620;
-            --border: #1a2030;
-            --border-bright: #252e40;
-            --red: #d42b2b;
-            --red-dim: #8a1a1a;
-            --red-glow: rgba(212, 43, 43, 0.2);
-            --green: #1db954;
-            --green-glow: rgba(29, 185, 84, 0.15);
-            --yellow: #f59e0b;
-            --text: #e8eaf0;
-            --text-dim: #4a5568;
-            --text-mid: #8892a4;
+            /* CYBERPUNK COLOR PALETTE */
+            --bg: #050505;
+            --surface: #111111;
+            --surface2: #1a1a1a;
+            --border: #2a2a2a;
+            --border-bright: #444444;
+            --red: #ff003c;         /* Neon Red */
+            --red-dim: #b3002a;
+            --red-glow: rgba(255, 0, 60, 0.3);
+            --green: #00ff9d;       /* Neon Green */
+            --green-glow: rgba(0, 255, 157, 0.2);
+            --yellow: #fcee0a;      /* Cyberpunk Yellow */
+            
+            /* HIGH READABILITY TEXT */
+            --text: #ffffff;        /* Pure White */
+            --text-dim: #8b939c;    /* Readable gray */
+            --text-mid: #b8c0c9;    /* Bright gray */
+            
             --mono: 'Space Mono', monospace;
             --display: 'Syne', sans-serif;
         }
@@ -71,9 +75,13 @@
             font-size: clamp(20px, 4vw, 28px);
             font-weight: 800;
             letter-spacing: -1px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.1);
         }
 
-        .header h1 span { color: var(--red); }
+        .header h1 span { 
+            color: var(--red); 
+            text-shadow: 0 0 12px var(--red-glow); 
+        }
 
         .version-tag {
             font-size: 10px;
@@ -101,8 +109,8 @@
 
         .settings-btn:hover, .update-btn:hover { color: var(--text); border-color: var(--red-dim); }
         .settings-btn.active { color: var(--text); border-color: var(--red-dim); background: var(--surface); }
-        .update-btn { border-color: rgba(29,185,84,0.3); color: var(--green); }
-        .update-btn:hover { background: var(--green-glow); }
+        .update-btn { border-color: rgba(0, 255, 157, 0.3); color: var(--green); }
+        .update-btn:hover { background: var(--green-glow); text-shadow: 0 0 8px var(--green); }
         .update-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .settings-dropdown {
@@ -146,7 +154,7 @@
             width: 100px;
         }
 
-        .speed-input:focus { outline: none; border-color: var(--red-dim); }
+        .speed-input:focus { outline: none; border-color: var(--red-dim); box-shadow: 0 0 5px var(--red-glow); }
         .speed-unit { font-size: 10px; color: var(--text-dim); }
 
         .tabs {
@@ -170,7 +178,7 @@
             transition: all 0.2s;
         }
 
-        .tab-btn.active { color: var(--text); border-bottom-color: var(--red); }
+        .tab-btn.active { color: var(--text); border-bottom-color: var(--red); text-shadow: 0 0 8px rgba(255,255,255,0.2); }
         .tab-btn:hover:not(.active) { color: var(--text-mid); }
 
         .tab-panel { display: none; }
@@ -256,12 +264,12 @@
             font-size: 11px;
             cursor: pointer;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a5568'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23b8c0c9'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 10px center;
         }
 
-        select:focus { outline: none; border-color: var(--red-dim); }
+        select:focus { outline: none; border-color: var(--red-dim); box-shadow: 0 0 4px var(--red-glow); }
 
         select[multiple] {
             appearance: auto;
@@ -301,7 +309,7 @@
             transition: all 0.2s;
         }
 
-        .btn-analyze:hover:not(:disabled) { border-color: var(--red-dim); color: var(--text); }
+        .btn-analyze:hover:not(:disabled) { border-color: var(--red-dim); color: var(--text); box-shadow: 0 0 10px var(--red-glow); }
         .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
 
         #analyze-results {
@@ -318,11 +326,12 @@
             overflow: hidden;
             animation: slideIn 0.2s ease forwards;
             cursor: grab;
-            transition: opacity 0.2s, border-color 0.2s;
+            transition: opacity 0.2s, border-color 0.2s, box-shadow 0.2s;
         }
 
+        .analyze-item:hover { border-color: var(--border-bright); }
         .analyze-item.dragging { opacity: 0.4; cursor: grabbing; }
-        .analyze-item.drag-over-item { border-color: var(--red-dim); }
+        .analyze-item.drag-over-item { border-color: var(--red-dim); box-shadow: 0 0 10px var(--red-glow); }
 
         .skeleton-item {
             background: var(--surface);
@@ -389,10 +398,10 @@
             position: absolute;
             top: 8px;
             left: 8px;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.7);
             border-radius: 4px;
             padding: 3px 5px;
-            color: var(--text-dim);
+            color: var(--text);
             font-size: 10px;
             cursor: grab;
             user-select: none;
@@ -407,6 +416,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            color: var(--text);
         }
 
         .analyze-meta {
@@ -434,7 +444,7 @@
         }
 
         .clip-toggle:hover { color: var(--text); border-color: var(--yellow); }
-        .clip-toggle.active { color: var(--yellow); border-color: var(--yellow); background: rgba(245,158,11,0.08); }
+        .clip-toggle.active { color: var(--bg); border-color: var(--yellow); background: var(--yellow); font-weight: bold; }
 
         .clip-inputs {
             display: none;
@@ -457,7 +467,7 @@
             width: 80px;
         }
 
-        .clip-input:focus { outline: none; border-color: var(--yellow); }
+        .clip-input:focus { outline: none; border-color: var(--yellow); box-shadow: 0 0 5px rgba(252, 238, 10, 0.3); }
         .clip-label { font-size: 9px; color: var(--text-dim); }
 
         .playlist-entries {
@@ -494,6 +504,7 @@
         .playlist-entry.selected .playlist-entry-check {
             background: var(--green);
             border-color: var(--green);
+            box-shadow: 0 0 5px var(--green-glow);
         }
 
         .playlist-entry-thumb {
@@ -511,6 +522,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             flex: 1;
+            color: var(--text);
         }
 
         .playlist-entry-duration {
@@ -560,6 +572,7 @@
         .btn-download:hover:not(:disabled) {
             box-shadow: 0 4px 24px var(--red-glow);
             transform: translateY(-1px);
+            background: #ff1a4d;
         }
 
         .btn-download:disabled {
@@ -571,7 +584,7 @@
         .btn-cancel-all {
             width: 100%;
             background: transparent;
-            border: 1px solid rgba(212,43,43,0.4);
+            border: 1px solid rgba(255, 0, 60, 0.4);
             color: var(--red);
             padding: 10px;
             border-radius: 8px;
@@ -584,7 +597,7 @@
             display: none;
         }
 
-        .btn-cancel-all:hover { background: var(--red-glow); }
+        .btn-cancel-all:hover { background: var(--red-glow); box-shadow: 0 0 10px var(--red-glow); }
 
         #dl-list {
             margin-top: 20px;
@@ -598,13 +611,13 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
-            transition: border-color 0.4s;
+            transition: border-color 0.4s, box-shadow 0.4s;
             animation: slideIn 0.25s ease forwards;
         }
 
-        .dl-item.done       { border-color: rgba(29, 185, 84, 0.25); }
-        .dl-item.error      { border-color: rgba(212, 43, 43, 0.35); }
-        .dl-item.cancelled  { border-color: rgba(245, 158, 11, 0.3); opacity: 0.6; }
+        .dl-item.done       { border-color: var(--green); box-shadow: 0 0 10px var(--green-glow); }
+        .dl-item.error      { border-color: var(--red); box-shadow: 0 0 10px var(--red-glow); }
+        .dl-item.cancelled  { border-color: var(--yellow); opacity: 0.7; }
 
         .dl-thumb-wrap {
             position: relative;
@@ -645,7 +658,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             padding: 16px;
         }
 
@@ -662,13 +675,14 @@
             overflow: hidden;
             text-overflow: ellipsis;
             width: 100%;
+            color: var(--text);
         }
 
         .dl-prog-status { font-size: 10px; color: var(--text-mid); margin-bottom: 10px; }
 
         .bar-bg {
             width: 100%;
-            height: 3px;
+            height: 4px;
             background: rgba(255,255,255,0.1);
             border-radius: 10px;
             overflow: hidden;
@@ -680,9 +694,10 @@
             width: 0%;
             transition: width 0.5s ease;
             border-radius: 10px;
+            box-shadow: 0 0 8px var(--red);
         }
 
-        .bar-fill.done { background: var(--green); }
+        .bar-fill.done { background: var(--green); box-shadow: 0 0 8px var(--green); }
 
         .dl-prog-meta {
             display: flex;
@@ -708,6 +723,7 @@
             text-overflow: ellipsis;
             flex: 1;
             margin-right: 10px;
+            color: var(--text);
         }
 
         .dl-actions { display: flex; gap: 6px; flex-shrink: 0; }
@@ -727,20 +743,20 @@
         }
 
         .action-btn:hover { border-color: var(--border-bright); color: var(--text); }
-        .action-btn.open-btn { border-color: rgba(29,185,84,0.3); color: var(--green); }
-        .action-btn.open-btn:hover { background: var(--green-glow); }
-        .action-btn.retry-btn { border-color: rgba(212,43,43,0.3); color: var(--red); }
-        .action-btn.retry-btn:hover { background: var(--red-glow); }
-        .action-btn.cancel-btn { border-color: rgba(245,158,11,0.3); color: var(--yellow); }
-        .action-btn.cancel-btn:hover { background: rgba(245,158,11,0.08); }
-        .action-btn.remove-btn { border-color: rgba(212,43,43,0.2); color: var(--text-dim); }
+        .action-btn.open-btn { border-color: rgba(0, 255, 157, 0.4); color: var(--green); }
+        .action-btn.open-btn:hover { background: var(--green-glow); box-shadow: 0 0 8px var(--green-glow); }
+        .action-btn.retry-btn { border-color: rgba(255, 0, 60, 0.4); color: var(--red); }
+        .action-btn.retry-btn:hover { background: var(--red-glow); box-shadow: 0 0 8px var(--red-glow); }
+        .action-btn.cancel-btn { border-color: rgba(252, 238, 10, 0.3); color: var(--yellow); }
+        .action-btn.cancel-btn:hover { background: rgba(252, 238, 10, 0.1); }
+        .action-btn.remove-btn { border-color: rgba(255, 0, 60, 0.2); color: var(--text-dim); }
         .action-btn.remove-btn:hover { color: var(--red); border-color: var(--red); }
 
         .play-btn {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: rgba(212, 43, 43, 0.9);
+            background: rgba(255, 0, 60, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -748,7 +764,7 @@
             transition: transform 0.15s, background 0.15s;
         }
 
-        .dl-thumb-wrap:hover .play-btn { transform: scale(1.1); background: var(--red); }
+        .dl-thumb-wrap:hover .play-btn { transform: scale(1.1); background: var(--red); box-shadow: 0 0 15px var(--red-glow); }
         .play-btn svg { margin-left: 3px; }
 
         #history-list {
@@ -787,6 +803,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             margin-bottom: 3px;
+            color: var(--text);
         }
 
         .history-meta { font-size: 9px; color: var(--text-dim); }
@@ -820,6 +837,7 @@
             width: 100%;
             max-width: 520px;
             overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
         }
 
         .preview-header {
@@ -832,7 +850,7 @@
 
         .preview-header-title {
             font-size: 11px;
-            color: var(--text-dim);
+            color: var(--text-mid);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -850,7 +868,7 @@
             flex-shrink: 0;
         }
 
-        .preview-close:hover { color: var(--text); }
+        .preview-close:hover { color: var(--red); }
 
         #preview-player {
             width: 100%;
@@ -859,6 +877,12 @@
             display: block;
         }
 
+        @keyframes indeterminate {
+            0%   { transform: translateX(-100%); opacity: 0.6; }
+            50%  { transform: translateX(0%);    opacity: 1; }
+            100% { transform: translateX(100%);  opacity: 0.6; }
+        }
+        
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(6px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -872,8 +896,8 @@
 <body>
 <div class="wrapper">
     <div class="header">
-        <h1>YT<span>.</span>DL</h1>
-        <span class="version-tag">v2.1.0</span>
+        <h1>GR<span>.</span>AB</h1>
+        <span class="version-tag">v2.3.0</span>
         <div class="header-actions">
             <button class="update-btn" id="update-btn" onclick="updateYtdlp()">UPDATE</button>
             <button class="settings-btn" id="settings-btn" onclick="toggleSettings()">SETTINGS</button>
@@ -1339,6 +1363,7 @@
                 `;
             }
 
+            const isGeneric = item.type === 'generic';
             el.innerHTML = `
                 <div class="thumb-wrap">
                     ${thumbHtml}
@@ -1348,14 +1373,17 @@
                     <div class="analyze-title">${item.title}</div>
                     <div class="analyze-meta">${item.type === 'playlist' ? `${item.entries.length} videos` : (item.duration || '')}</div>
                     <div class="analyze-controls">
-                        <select id="fmt-${i}">
-                            <option value="video">MP4 Video</option>
-                            <option value="audio">MP3 Audio</option>
-                        </select>
-                        <select id="qual-${i}">${heightOptions}</select>
-                        ${subHtml}
-                        <button class="clip-toggle" id="clip-toggle-${i}" onclick="toggleClip(${i})">Clip</button>
+                        ${isGeneric ? `<span style="font-size:10px;color:var(--text-dim);letter-spacing:1px">DIRECT FILE DOWNLOAD</span>` : `
+                            <select id="fmt-${i}">
+                                <option value="video">MP4 Video</option>
+                                <option value="audio">MP3 Audio</option>
+                            </select>
+                            <select id="qual-${i}">${heightOptions}</select>
+                            ${subHtml}
+                            <button class="clip-toggle" id="clip-toggle-${i}" onclick="toggleClip(${i})">Clip</button>
+                        `}
                     </div>
+                    ${isGeneric ? '' : `
                     <div class="clip-inputs" id="clip-inputs-${i}">
                         <span class="clip-label">Start</span>
                         <input type="number" class="clip-input" id="clip-start-${i}" placeholder="0" min="0">
@@ -1363,13 +1391,16 @@
                         <input type="number" class="clip-input" id="clip-end-${i}" placeholder="sec" min="0">
                         <span class="clip-label">sec</span>
                     </div>
+                    `}
                 </div>
                 ${playlistHtml}
             `;
 
-            el.querySelector(`#fmt-${i}`).addEventListener('change', (e) => {
-                updateQualitySelect(el.querySelector(`#qual-${i}`), e.target.value, item.heights || [1080, 720, 480]);
-            });
+            if (!isGeneric) {
+                el.querySelector(`#fmt-${i}`)?.addEventListener('change', (e) => {
+                    updateQualitySelect(el.querySelector(`#qual-${i}`), e.target.value, item.heights || [1080, 720, 480]);
+                });
+            }
 
             if (item.type === 'playlist') {
                 el.querySelectorAll('.playlist-entry').forEach(entryEl => {
@@ -1482,7 +1513,7 @@
                     itemsToSend.push({ url: entry.url, title: entry.title, thumbnail: entry.thumbnail || '', fmt, qual, sub, sub_langs: subLangs, clip_start: clipStart, clip_end: clipEnd });
                 });
             } else {
-                itemsToSend.push({ url: x.url, title: x.title, thumbnail: x.thumbnail || '', fmt, qual, sub, sub_langs: subLangs, clip_start: clipStart, clip_end: clipEnd });
+                itemsToSend.push({ url: x.url, title: x.title, thumbnail: x.thumbnail || '', type: x.type, fmt, qual, sub, sub_langs: subLangs, clip_start: clipStart, clip_end: clipEnd });
             }
         });
 
@@ -1572,7 +1603,15 @@
                 const etaEl = document.getElementById(`eta-${id}`);
 
                 if (statusEl) statusEl.textContent = item.status;
-                if (barEl) barEl.style.width = item.percent + '%';
+                if (barEl) {
+                    if (item.percent > 0) {
+                        barEl.style.width = item.percent + '%';
+                        barEl.style.animation = '';
+                    } else if (item.status === 'Downloading...') {
+                        barEl.style.width = '100%';
+                        barEl.style.animation = 'indeterminate 1.5s ease-in-out infinite';
+                    }
+                }
                 if (speedEl) speedEl.textContent = item.speed !== '-' ? item.speed : '—';
                 if (etaEl) etaEl.textContent = item.eta !== '-' ? `ETA ${item.eta}` : '—';
 
@@ -1656,7 +1695,15 @@
                     const speedEl = document.getElementById(`speed-${rid}`);
                     const etaEl = document.getElementById(`eta-${rid}`);
                     if (statusEl) statusEl.textContent = item.status;
-                    if (barEl) barEl.style.width = item.percent + '%';
+                    if (barEl) {
+                        if (item.percent > 0) {
+                            barEl.style.width = item.percent + '%';
+                            barEl.style.animation = '';
+                        } else if (item.status === 'Downloading...') {
+                            barEl.style.width = '100%';
+                            barEl.style.animation = 'indeterminate 1.5s ease-in-out infinite';
+                        }
+                    }
                     if (speedEl) speedEl.textContent = item.speed !== '-' ? item.speed : '—';
                     if (etaEl) etaEl.textContent = item.eta !== '-' ? `ETA ${item.eta}` : '—';
                     if (item.done) {
@@ -1911,7 +1958,15 @@
             const etaEl = document.getElementById('eta-kick_0');
 
             if (statusEl) statusEl.textContent = item.status;
-            if (barEl) barEl.style.width = item.percent + '%';
+            if (barEl) {
+                if (item.percent > 0) {
+                    barEl.style.width = item.percent + '%';
+                    barEl.style.animation = '';
+                } else if (item.status === 'Downloading...') {
+                    barEl.style.width = '30%';
+                    barEl.style.animation = 'indeterminate 1.5s ease-in-out infinite';
+                }
+            }
             if (speedEl) speedEl.textContent = item.speed !== '-' ? item.speed : '—';
             if (etaEl) etaEl.textContent = item.eta !== '-' ? `ETA ${item.eta}` : '—';
 

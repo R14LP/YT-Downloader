@@ -1,7 +1,9 @@
 build/
 dist/
-setup/
 __pycache__/
 *.spec
 .venv/
 .vscode/
+*.exe
+Output/
+Grabber_Setup_*.exe

@@ -8,6 +8,9 @@ import webview
 import subprocess
 import json
 import shutil
+import urllib.parse
+import uuid as uuid_mod
+from curl_cffi import requests as cffi_requests
 
 if getattr(sys, 'frozen', False):
     template_folder = os.path.join(sys._MEIPASS, 'templates')
@@ -16,6 +19,8 @@ if getattr(sys, 'frozen', False):
 else:
     app = Flask(__name__)
     app_path = os.path.dirname(os.path.abspath(__file__))
+
+os.chdir(app_path)
 
 DOWNLOAD_FOLDER = os.path.join(os.path.expanduser("~"), "Downloads")
 if not os.path.exists(DOWNLOAD_FOLDER):
@@ -48,6 +53,7 @@ def no_cache(response):
     return response
 
 downloads = {}
+pending_downloads = {}
 downloads_lock = threading.Lock()
 cancel_flags = {}
 cancel_flags_lock = threading.Lock()
@@ -124,8 +130,34 @@ def analyze():
     if not urls:
         return jsonify({"status": "error", "message": "No links provided."})
 
+    def is_direct_file(url):
+        direct_exts = {
+            '.bin', '.exe', '.zip', '.rar', '.7z', '.tar', '.gz',
+            '.pdf', '.iso', '.dmg', '.pkg', '.deb', '.rpm',
+            '.apk', '.msi', '.torrent', '.csv', '.xlsx', '.docx',
+        }
+        parsed = urllib.parse.urlparse(url)
+        if 'kick.com' in parsed.netloc:
+            return False
+        path = parsed.path.lower()
+        _, ext = os.path.splitext(path)
+        return ext in direct_exts
+
     results = []
     for url in urls:
+        if is_direct_file(url):
+            filename = os.path.basename(urllib.parse.urlparse(url).path) or 'file'
+            results.append({
+                'type': 'generic',
+                'title': filename,
+                'thumbnail': '',
+                'duration': '',
+                'url': url,
+                'heights': [],
+                'has_subs': False,
+                'sub_langs': [],
+            })
+            continue
         try:
             with yt_dlp.YoutubeDL({'quiet': True, 'noplaylist': False, 'extract_flat': 'in_playlist'}) as ydl:
                 info = ydl.extract_info(url, download=False)
@@ -177,7 +209,17 @@ def analyze():
                     'sub_langs': sub_langs,
                 })
         except Exception as e:
-            results.append({'type': 'error', 'url': url, 'message': str(e)})
+            filename = os.path.basename(urllib.parse.urlparse(url).path) or 'file'
+            results.append({
+                'type': 'generic',
+                'title': filename,
+                'thumbnail': '',
+                'duration': '',
+                'url': url,
+                'heights': [],
+                'has_subs': False,
+                'sub_langs': [],
+            })
 
     return jsonify({"status": "success", "results": results})
 
@@ -344,6 +386,7 @@ def retry_download():
             'url': downloads[vid_id]['url'],
             'title': downloads[vid_id]['title'],
             'thumbnail': downloads[vid_id].get('thumbnail', ''),
+            'type': downloads[vid_id].get('type', 'video'),
             'fmt': downloads[vid_id].get('fmt', 'video'),
             'qual': downloads[vid_id].get('qual', '1080'),
             'sub': downloads[vid_id].get('sub', 'none'),
@@ -374,7 +417,122 @@ def retry_download():
     t.start()
     return jsonify({"status": "ok"})
 
+def _guess_filename(url, headers):
+    cd = headers.get('Content-Disposition', '')
+    match = re.findall(r'filename\*?=["\']?(?:UTF-8\'\')?([^"\';\r\n]+)', cd, re.IGNORECASE)
+    if match:
+        return urllib.parse.unquote(match[-1].strip())
+    path = urllib.parse.urlparse(url).path
+    name = os.path.basename(urllib.parse.unquote(path))
+    if name and '.' in name:
+        return name
+    ct = headers.get('Content-Type', '').split(';')[0].strip()
+    ext_map = {
+        'application/pdf': '.pdf', 'application/zip': '.zip',
+        'application/x-rar-compressed': '.rar', 'application/x-7z-compressed': '.7z',
+        'application/octet-stream': '.bin', 'video/mp4': '.mp4',
+        'audio/mpeg': '.mp3', 'image/jpeg': '.jpg', 'image/png': '.png',
+    }
+    ext = ext_map.get(ct, '.bin')
+    return f'download_{uuid_mod.uuid4().hex[:8]}{ext}'
+
+def _generic_download_worker(vid_id, url, title, extra_cookies=None):
+    import requests as req
+    import time
+    try:
+        start_time = time.time()
+        with downloads_lock:
+            downloads[vid_id]['status'] = 'Connecting...'
+
+        if isinstance(extra_cookies, dict):
+            cookie_str = extra_cookies.get('cookies', '')
+            ua_str = extra_cookies.get('user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')
+        else:
+            cookie_str = extra_cookies or ''
+            ua_str = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+
+        headers = {
+            'User-Agent': ua_str,
+            'Accept': '*/*'
+        }
+        if cookie_str:
+            headers['Cookie'] = cookie_str
+
+        filename = _guess_filename(url, {})
+        total = 0
+        try:
+            head = req.head(url, headers=headers, allow_redirects=True, timeout=10)
+            filename = _guess_filename(url, head.headers)
+            total = int(head.headers.get('Content-Length', 0))
+        except Exception:
+            pass
+
+        filepath = get_unique_filepath(DOWNLOAD_FOLDER, os.path.splitext(filename)[0], filename.rsplit('.', 1)[-1] if '.' in filename else 'bin')
+
+        with req.get(url, headers=headers, stream=True, timeout=30) as r:
+            r.raise_for_status()
+            total = int(r.headers.get('Content-Length', 0))
+            downloaded = 0
+            with open(filepath, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=1024 * 256):
+                    with cancel_flags_lock:
+                        if cancel_flags.get(vid_id):
+                            raise Exception('Cancelled')
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        elapsed = time.time() - start_time
+                        speed_bps = downloaded / elapsed if elapsed > 0 else 0
+                        speed_str = f'{speed_bps/1024/1024:.1f} MB/s' if speed_bps > 1024*1024 else f'{speed_bps/1024:.0f} KB/s'
+                        mb_done = downloaded / (1024 * 1024)
+                        with downloads_lock:
+                            downloads[vid_id]['status'] = 'Downloading...'
+                            downloads[vid_id]['percent'] = (downloaded / total * 100) if total else 0
+                            downloads[vid_id]['speed'] = speed_str
+                            if total and speed_bps > 0:
+                                remaining = (total - downloaded) / speed_bps
+                                if remaining < 60:
+                                    eta_str = f'{int(remaining)}s'
+                                else:
+                                    eta_str = f'{int(remaining/60)}m {int(remaining%60)}s'
+                            else:
+                                eta_str = f'{mb_done:.1f} MB'
+                            downloads[vid_id]['eta'] = eta_str
+
+        with downloads_lock:
+            downloads[vid_id]['status'] = 'Done'
+            downloads[vid_id]['percent'] = 100.0
+            downloads[vid_id]['done'] = True
+            downloads[vid_id]['filepath'] = filepath
+
+        with history_lock:
+            history.append({
+                'title': title,
+                'filepath': filepath,
+                'thumbnail': '',
+                'format': 'file',
+                'quality': '',
+            })
+
+    except Exception as e:
+        err_msg = str(e)
+        is_cancelled = 'Cancelled' in err_msg or cancel_flags.get(vid_id, False)
+        with downloads_lock:
+            if is_cancelled:
+                downloads[vid_id]['status'] = 'Cancelled'
+                downloads[vid_id]['cancelled'] = True
+                downloads[vid_id]['error'] = False
+            else:
+                downloads[vid_id]['status'] = f'Error: {err_msg[:80]}'
+                downloads[vid_id]['error'] = True
+
 def _run_single(vid_id, entry, format_type, quality, subtitle_mode, subtitle_langs, clip_start=None, clip_end=None):
+    title = entry.get('title', 'download')
+
+    if entry.get('type') == 'generic':
+        extra_cookies = pending_downloads.get(entry['url'], None)
+        _generic_download_worker(vid_id, entry['url'], title, extra_cookies)
+        return
     with cancel_flags_lock:
         cancel_flags[vid_id] = False
 
@@ -481,8 +639,12 @@ def _run_single(vid_id, entry, format_type, quality, subtitle_mode, subtitle_lan
                 downloads[vid_id]['cancelled'] = True
                 downloads[vid_id]['error'] = False
             else:
-                downloads[vid_id]['status'] = f'Error: {err_msg[:80]}'
-                downloads[vid_id]['error'] = True
+                with downloads_lock:
+                    downloads[vid_id]['status'] = 'yt-dlp failed, trying direct...'
+                    downloads[vid_id]['percent'] = 0.0
+                    downloads[vid_id]['error'] = False
+                extra_cookies = pending_downloads.get(entry['url'], None)
+                _generic_download_worker(vid_id, entry['url'], title, extra_cookies)
 
 @app.route('/download', methods=['POST'])
 def download():
@@ -506,6 +668,7 @@ def download():
             downloads[str(i)] = {
                 'title': entry['title'],
                 'url': entry['url'],
+                'type': entry.get('type', 'video'),
                 'status': 'Waiting...',
                 'percent': 0.0,
                 'speed': '-',
@@ -542,6 +705,8 @@ def download():
                     downloads[vid_id]['status'] = 'Cancelled'
                     downloads[vid_id]['cancelled'] = True
                 return
+            with downloads_lock:
+                entry['type'] = downloads[vid_id].get('type', entry.get('type', 'video'))
             _run_single(vid_id, entry, item_fmt, item_qual, item_sub, item_sub_langs, item_clip_start, item_clip_end)
 
     def run_downloads():
@@ -585,26 +750,33 @@ def preview_file():
 
 @app.route('/kick_analyze', methods=['POST'])
 def kick_analyze():
-    import urllib.request
     url = request.form.get('url', '').strip()
     if not url:
         return jsonify({"status": "error", "message": "No URL provided."})
 
     try:
         vod_match = re.search(r'/videos/([a-f0-9\-]{36})', url)
+        vod_id_match = re.search(r'/videos/(\d+)', url)
         clip_match = re.search(r'/clips/([A-Za-z0-9_\-]+)', url) or re.search(r'/clip/([A-Za-z0-9_\-]+)', url)
 
-        headers = {
-            'Accept': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        }
+        if vod_match or vod_id_match:
+            if vod_match:
+                uuid = vod_match.group(1)
+                api_url = f'https://kick.com/api/v1/video/{uuid}'
+            else:
+                vid_id = vod_id_match.group(1)
+                channel_slug = re.search(r'kick\.com/([^/]+)/videos', url)
+                if channel_slug:
+                    slug = channel_slug.group(1)
+                    api_url = f'https://kick.com/api/v2/channels/{slug}/videos?video_id={vid_id}'
+                else:
+                    return jsonify({"status": "error", "message": "Could not parse channel."})
 
-        if vod_match:
-            uuid = vod_match.group(1)
-            api_url = f'https://kick.com/api/v1/video/{uuid}'
-            req = urllib.request.Request(api_url, headers=headers)
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read().decode())
+            resp = cffi_requests.get(api_url, impersonate="chrome", timeout=15)
+            data = resp.json()
+
+            if isinstance(data, list):
+                data = data[0] if data else {}
 
             playback_url = data.get('source') or data.get('playback_url') or data.get('stream', {}).get('url')
             title = data.get('session_title') or data.get('title') or 'Kick VOD'
@@ -615,9 +787,8 @@ def kick_analyze():
             qualities = []
             if playback_url:
                 try:
-                    m3u8_req = urllib.request.Request(playback_url, headers=headers)
-                    with urllib.request.urlopen(m3u8_req, timeout=15) as m3u8_resp:
-                        m3u8_content = m3u8_resp.read().decode()
+                    m3u8_resp = cffi_requests.get(playback_url, impersonate="chrome", timeout=15)
+                    m3u8_content = m3u8_resp.text
                     base_url = playback_url.rsplit('/', 1)[0]
                     lines = m3u8_content.splitlines()
                     for i, line in enumerate(lines):
@@ -646,9 +817,9 @@ def kick_analyze():
         elif clip_match:
             clip_id = clip_match.group(1)
             api_url = f'https://kick.com/api/v2/clips/{clip_id}'
-            req = urllib.request.Request(api_url, headers=headers)
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read().decode())
+            
+            resp = cffi_requests.get(api_url, impersonate="chrome", timeout=15)
+            data = resp.json()
 
             clip_data = data.get('clip', data)
             playback_url = clip_data.get('clip_url') or clip_data.get('playback_url')
@@ -660,9 +831,8 @@ def kick_analyze():
             qualities = []
             if playback_url:
                 try:
-                    m3u8_req = urllib.request.Request(playback_url, headers={'User-Agent': 'Mozilla/5.0'})
-                    with urllib.request.urlopen(m3u8_req, timeout=15) as m3u8_resp:
-                        m3u8_content = m3u8_resp.read().decode()
+                    m3u8_resp = cffi_requests.get(playback_url, impersonate="chrome", timeout=15)
+                    m3u8_content = m3u8_resp.text
                     base_url = playback_url.rsplit('/', 1)[0]
                     lines = m3u8_content.splitlines()
                     for i, line in enumerate(lines):
@@ -693,8 +863,54 @@ def kick_analyze():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
+        
+@app.route('/receive_url', methods=['POST'])
+def receive_url():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    cookies = data.get('cookies', '')
+    ua = data.get('user_agent', '')
+    if not url:
+        return jsonify({"status": "error"})
+    
+    pending_downloads[url] = {'cookies': cookies, 'user_agent': ua}
 
+    def inject():
+        import time
+        # Pencerenin var olmasını bekle
+        while not window_ref:
+            time.sleep(0.2)
+            
+        time.sleep(1.0) # Arayüzün çizilmesi için kısa bir pay
+        
+        safe_url = url.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
+        
+        # DOM manipülasyonunu tarayıcı motoruna bırak (PyWebView'i yormaz)
+        js_code = f'''
+            setTimeout(function() {{
+                try {{
+                    if ("{safe_url}".includes("kick.com")) {{
+                        document.getElementById("kick-url").value = "{safe_url}";
+                        document.getElementById("tab-btn-kick").click();
+                        document.getElementById("kick-analyze-btn").click();
+                    }} else {{
+                        document.getElementById("urls").value = "{safe_url}";
+                        document.getElementById("tab-btn-download").click();
+                        document.getElementById("analyze-btn").click();
+                    }}
+                }} catch(e) {{ console.error("Inject Error:", e); }}
+            }}, 500);
+        '''
+        try:
+            window_ref.evaluate_js(js_code)
+        except Exception as e:
+            print("Injection failed:", e)
 
+    t = threading.Thread(target=inject)
+    t.daemon = True
+    t.start()
+    return jsonify({"status": "ok"})
+    
 @app.route('/kick_download', methods=['POST'])
 def kick_download():
     playback_url = request.form.get('playback_url')
@@ -824,7 +1040,7 @@ if __name__ == '__main__':
     t.start()
 
     window_ref = webview.create_window(
-        'YT Downloader',
+        'Grabber',
         'http://localhost:5000',
         width=w, height=h,
         resizable=True
