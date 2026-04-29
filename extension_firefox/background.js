@@ -28,6 +28,8 @@ function getCookiesForUrl(url, callback) {
 }
 
 function sendToGrabberApp(url, cookies) {
-    const port = browserAPI.runtime.connectNative("grabber_host");
-    port.postMessage({ url: url, cookies: cookies, user_agent: navigator.userAgent });
+    browserAPI.runtime.sendNativeMessage(
+        "grabber_host",
+        { url: url, cookies: cookies }
+    );
 }

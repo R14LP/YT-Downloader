@@ -1,11 +1,15 @@
 # Grabber
-A fast, dark-themed video and audio downloader built with Python and Flask.
+A fast, dark-themed video and audio downloader with seamless browser integration.
 
-[Download Latest Setup](https://github.com/R14LP/Grabber/releases/latest) | [Chrome Extension](#) | [Firefox Add-on](#)
+[Download Latest Setup](https://github.com/R14LP/Grabber/releases/latest) | [Chrome Extension](https://chromewebstore.google.com/detail/grabber-helper/gifammfggeflljpbpgckfodcalhofjcn) | [Firefox Add-on](https://addons.mozilla.org/firefox/addon/grabber-helper/)
 
 ---
 
 ## 🚀 Changelog
+
+### v2.4.0
+- **Dual Browser Native Messaging:** Fixed browser extension compatibility — Chrome and Firefox now each use a dedicated native host JSON, resolving conflicts with the shared config approach.
+- **Firefox Extension Fix:** Extension button now correctly launches the app and sends URLs on Firefox.
 
 ### v2.3.0 (Major Update)
 - **Project Renamed:** Now officially "Grabber" (GR.AB).
@@ -42,10 +46,8 @@ A fast, dark-themed video and audio downloader built with Python and Flask.
 
 ## 💻 Installation (Recommended for Users)
 
-The easiest way to use Grabber is via the official installer, which automatically configures the background bridges required for the browser extension.
-
-1. Go to [Releases](https://github.com/R14LP/Grabber/releases/latest) and download `Grabber_Setup_v2.3.0.exe`.
-2. Run the installer. *(This automatically registers the Native Messaging Host in your Windows Registry.)*
+1. Go to [Releases](https://github.com/R14LP/Grabber/releases/latest) and download `Grabber_Setup_v2.4.0.exe`.
+2. Run the installer. *(This automatically registers the Native Messaging Host in your Windows Registry for both Chrome and Firefox.)*
 3. Install the official **Grabber Helper** extension for your browser:
    - **Chrome / Edge / Brave:** [Link to Chrome Web Store]
    - **Firefox:** [Link to Firefox Add-ons]
@@ -54,8 +56,6 @@ The easiest way to use Grabber is via the official installer, which automaticall
 ---
 
 ## 🛠️ Running & Installing from Source (For Developers)
-
-If you want to run Grabber from the source code or modify the extension yourself, you need to manually configure the Native Messaging bridge.
 
 ### 1. Clone the repo
 ```bash
@@ -71,31 +71,57 @@ pip install flask yt-dlp pywebview pillow curl_cffi requests
 ### 3. Get FFmpeg
 1. Download from [gyan.dev](https://gyan.dev) (grab the `ffmpeg-release-essentials` build).
 2. Extract `ffmpeg.exe` and `ffprobe.exe`.
-3. Place them in the `dist/` folder (or next to `app.py` if running raw).
+3. Place them next to `app.py`.
 
-### 4. Setup the Custom Browser Extension (Unpacked)
-
-If you are developing and want to load the local extension instead of the store version:
-
+### 4. Load the Extension (Unpacked)
 1. Open your browser's extension page (`chrome://extensions` or `about:debugging`).
 2. Enable **Developer Mode**.
 3. Click **Load unpacked** and select either the `extension_chrome` or `extension_firefox` folder.
-4. **Important:** Chrome will generate a new random Extension ID. Copy this ID.
+4. **Chrome only:** Copy the generated Extension ID.
 
 ### 5. Configure Native Messaging Manually
 
-To allow the unpacked extension to talk to your local Python script:
+Chrome and Firefox require separate JSON files because they use different fields to identify allowed extensions.
 
-1. Open `grabber_host.json`.
-2. Update the `path` to point to the absolute path of your compiled `native_host.exe` (or a `.bat` wrapper pointing to `native_host.py`). Remember to use double backslashes (`\\`).
-3. Update `allowed_origins` with the new Extension ID you got from Chrome in Step 4.
-4. **Add to Registry:** Open Command Prompt as Administrator and run the following command *(replace the path with your actual JSON path)*:
-
-```dos
-REG ADD "HKCU\Software\Google\Chrome\NativeMessagingHosts\grabber_host" /ve /t REG_SZ /d "C:\Path\To\Your\grabber_host.json" /f
+**`grabber_host_chrome.json`:**
+```json
+{
+  "name": "grabber_host",
+  "description": "Grabber",
+  "path": "C:\\Grabber\\native_host.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://YOUR_EXTENSION_ID_HERE/"
+  ]
+}
 ```
 
-> For Firefox, replace `Google\Chrome` with `Mozilla` in the registry path.
+**`grabber_host_firefox.json`:**
+```json
+{
+  "name": "grabber_host",
+  "description": "Grabber",
+  "path": "C:\\Grabber\\native_host.exe",
+  "type": "stdio",
+  "allowed_extensions": [
+    "grab@r14lp"
+  ]
+}
+```
+
+Update `path` in both files to point to your `native_host.exe` (or a `.bat` pointing to `native_host.py`). Use double backslashes.
+
+**Add to Registry (run as Administrator):**
+
+For Chrome:
+```
+REG ADD "HKCU\Software\Google\Chrome\NativeMessagingHosts\grabber_host" /ve /t REG_SZ /d "C:\Path\To\grabber_host_chrome.json" /f
+```
+
+For Firefox:
+```
+REG ADD "HKCU\Software\Mozilla\NativeMessagingHosts\grabber_host" /ve /t REG_SZ /d "C:\Path\To\grabber_host_firefox.json" /f
+```
 
 ### 6. Run the App
 ```bash
@@ -106,17 +132,13 @@ python app.py
 
 ## 📦 Building the Executables
 
-You must compile `native_host.py` separately so the browser can execute it silently in the background.
-
 ```bash
-# 1. Build the invisible background bridge
 pyinstaller --clean --onefile --noconsole native_host.py
 
-# 2. Build the main Grabber application
 pyinstaller --clean --onefile --noconsole --add-data "templates;templates" --icon "icon.ico" --name "Grabber" app.py
 ```
 
-After building, ensure `ffmpeg.exe`, `ffprobe.exe`, and `grabber_host.json` are placed in the same directory as the compiled `.exe` files.
+After building, place `ffmpeg.exe`, `ffprobe.exe`, `grabber_host_chrome.json`, and `grabber_host_firefox.json` next to the compiled `.exe` files.
 
 ---
 
