@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Grabber Helper",
-  "version": "1.4",
+  "version": "1.5",
   "description": "Send downloads to Grabber app",
   "permissions": [
     "activeTab",
@@ -21,7 +21,6 @@
     }
   ],
   "action": {
-    "default_popup": "popup.html",
     "default_title": "Grabber"
   }
 }
